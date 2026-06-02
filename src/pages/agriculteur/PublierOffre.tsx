@@ -1,212 +1,103 @@
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Card, CardHeader, CardBody, CardFooter } from '../../components/common/Card';
-import { Button } from '../../components/common/Button';
-import { Input } from '../../components/forms/Input';
-import { Select } from '../../components/forms/Select';
-import { UploadPhoto } from '../../components/forms/UploadPhoto';
-import { useOffreStore } from '../../store/slices/offreSlice';
-import { useAuthStore } from '../../store/slices/authSlice';
-import { Offre } from '../../store/models/offre.model';
+import { useNavigate } from 'react-router-dom';
+import { Save, WifiOff } from 'lucide-react';
+import { useOffline } from '../../hooks/useOffline';
 
-// Schéma de validation
-const offreSchema = z.object({
-  product: z.string().min(1, 'Le produit est requis'),
-  quantityKg: z.number().min(1, 'La quantité doit être supérieure à 0'),
-  unitPriceAr: z.number().min(1, 'Le prix doit être supérieur à 0'),
-  location: z.object({
-    lat: z.number(),
-    lng: z.number(),
-    address: z.string().min(1, 'L\'adresse est requise'),
-  }),
-  availableUntil: z.string().min(1, 'La date de disponibilité est requise'),
-});
+const PublierOffre: React.FC = () => {
+  const navigate = useNavigate();
+  const { isOnline, addPendingSync } = useOffline();
+  
+  const [produit, setProduit] = useState('');
+  const [quantite, setQuantite] = useState('');
+  const [prix, setPrix] = useState('');
 
-type OffreFormData = z.infer<typeof offreSchema>;
-
-export const PublierOffre: React.FC = () => {
-  const { user } = useAuthStore();
-  const { createOffre, isLoading } = useOffreStore();
-  const [images, setImages] = useState<string[]>([]);
-  const [location, setLocation] = useState({ lat: -18.8792, lng: 47.5079, address: '' }); // Antananarivo par défaut
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<OffreFormData>({
-    resolver: zodResolver(offreSchema),
-  });
-
-  const onSubmit = async (data: OffreFormData) => {
-    if (!user) return;
-
-    const offreData: Omit<Offre, 'id' | 'createdAt' | 'updatedAt'> = {
-      userId: user.id,
-      product: data.product,
-      quantityKg: data.quantityKg,
-      unitPriceAr: data.unitPriceAr,
-      totalPriceAr: data.quantityKg * data.unitPriceAr,
-      location: data.location,
-      availableUntil: new Date(data.availableUntil),
-      status: 'active',
-      images: images.length > 0 ? images : undefined,
-      syncStatus: 'pending',
-    };
-
-    try {
-      await createOffre(offreData);
-      alert('Offre publiée avec succès !');
-      // Rediriger vers Mes offres
-    } catch (error) {
-      alert('Erreur lors de la publication de l\'offre');
-    }
-  };
-
-  const handleGeolocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            address: `Position GPS: ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`,
-          });
-        },
-        (error) => {
-          alert('Impossible d\'obtenir votre position');
-        }
-      );
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isOnline) {
+      alert("Offre publiée avec succès !");
     } else {
-      alert('Géolocalisation non supportée');
+      addPendingSync();
+      alert("Vous êtes hors-ligne. L'offre est sauvegardée et sera publiée dès que le réseau sera disponible.");
     }
+    navigate('/agriculteur/dashboard');
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <Card>
-        <CardHeader>
-          <h1 className="text-2xl font-bold text-gray-900">Publier une offre</h1>
-          <p className="text-gray-600">Vendez vos produits agricoles directement aux acheteurs</p>
-        </CardHeader>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <CardBody className="space-y-4">
-            {/* Produit */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Produit *
-              </label>
-              <Select
-                {...register('product')}
-                error={errors.product?.message}
-              >
-                <option value="">Sélectionnez un produit</option>
-                <option value="riz">Riz</option>
-                <option value="mais">Maïs</option>
-                <option value="tomate">Tomate</option>
-                <option value="oignon">Oignon</option>
-                <option value="pomme_de_terre">Pomme de terre</option>
-                <option value="carotte">Carotte</option>
-                <option value="chou">Chou</option>
-                <option value="poivron">Poivron</option>
-                <option value="aubergine">Aubergine</option>
-                <option value="autre">Autre</option>
-              </Select>
-            </div>
+    <div className="max-w-2xl mx-auto">
+      <h2 className="text-2xl font-bold text-green-800 mb-6">Publier une nouvelle offre</h2>
 
-            {/* Quantité */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Quantité (kg) *
-              </label>
-              <Input
-                type="number"
-                {...register('quantityKg', { valueAsNumber: true })}
-                error={errors.quantityKg?.message}
-                placeholder="Ex: 100"
-              />
-            </div>
+      {!isOnline && (
+        <div className="bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4 mb-6 flex items-center rounded">
+          <WifiOff size={20} className="mr-3" />
+          <p>Mode hors-ligne actif. Les données seront stockées localement.</p>
+        </div>
+      )}
 
-            {/* Prix unitaire */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Prix unitaire (Ar/kg) *
-              </label>
-              <Input
-                type="number"
-                {...register('unitPriceAr', { valueAsNumber: true })}
-                error={errors.unitPriceAr?.message}
-                placeholder="Ex: 2000"
-              />
-            </div>
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-md border border-gray-100 space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Produit agricole</label>
+          <select 
+            required
+            value={produit}
+            onChange={(e) => setProduit(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
+          >
+            <option value="">Sélectionnez un produit...</option>
+            <option value="riz">Riz (Makalioka)</option>
+            <option value="mais">Maïs</option>
+            <option value="haricot">Haricot</option>
+            <option value="pomme_terre">Pomme de terre</option>
+            <option value="arachide">Arachide</option>
+          </select>
+        </div>
 
-            {/* Localisation */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Localisation *
-              </label>
-              <div className="flex gap-2">
-                <Input
-                  {...register('location.address')}
-                  value={location.address}
-                  onChange={(e) => setLocation({ ...location, address: e.target.value })}
-                  error={errors.location?.address?.message}
-                  placeholder="Adresse ou utiliser GPS"
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleGeolocation}
-                  className="whitespace-nowrap"
-                >
-                  📍 GPS
-                </Button>
-              </div>
-              <input type="hidden" {...register('location.lat')} value={location.lat} />
-              <input type="hidden" {...register('location.lng')} value={location.lng} />
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Quantité (kg)</label>
+            <input 
+              type="number" 
+              required
+              min="1"
+              value={quantite}
+              onChange={(e) => setQuantite(e.target.value)}
+              placeholder="Ex: 500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Prix souhaité (Ar / kg)</label>
+            <input 
+              type="number" 
+              required
+              min="1"
+              value={prix}
+              onChange={(e) => setPrix(e.target.value)}
+              placeholder="Ex: 2800"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
+            />
+          </div>
+        </div>
 
-            {/* Date de disponibilité */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Disponible jusqu'au *
-              </label>
-              <Input
-                type="date"
-                {...register('availableUntil')}
-                error={errors.availableUntil?.message}
-              />
-            </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Date de disponibilité prévue</label>
+          <input 
+            type="date" 
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
+          />
+        </div>
 
-            {/* Photos */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Photos (optionnel)
-              </label>
-              <UploadPhoto
-                onImagesChange={setImages}
-                maxImages={3}
-                accept="image/*"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Max 3 photos. Format JPG, PNG. Taille max 2MB par photo.
-              </p>
-            </div>
-          </CardBody>
-          <CardFooter>
-            <Button
-              type="submit"
-              isLoading={isLoading}
-              fullWidth
-            >
-              Publier l'offre
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
+        <div className="pt-4 border-t border-gray-200 flex justify-end space-x-3">
+          <button type="button" onClick={() => navigate(-1)} className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">
+            Annuler
+          </button>
+          <button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium flex items-center">
+            <Save size={18} className="mr-2" />
+            {isOnline ? 'Publier l\'offre' : 'Sauvegarder'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
+
+export default PublierOffre;

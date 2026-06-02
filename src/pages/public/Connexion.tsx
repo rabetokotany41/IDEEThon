@@ -1,107 +1,56 @@
-import colors from '../../components/common/color';
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Button } from '../../components/common/Button';
-import { Input } from '../../components/forms/Input';
-import { Select } from '../../components/forms/Select';
-import { Card, CardBody, CardHeader } from '../../components/common/Card';
-import { useAuth, demoUsers, type UserRole } from '../../hooks/useAuth';
-
-export const Connexion: React.FC = () => {
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+import { useNavigate } from 'react-router-dom';
+import { useAuth, type UserRole } from '../../hooks/useAuth';
+import Login from '../../components/layout/Auth/Login';
+import Register from '../../components/layout/Auth/Resisteur';
+const Connexion: React.FC = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const [phone, setPhone] = useState('0340000000');
 
-  // Liste des rôles pour le sélecteur
-  const roleOptions = [
-    { value: '', label: '-- Choisir un compte de démonstration --' },
-    { value: 'agriculteur', label: '🧑‍🌾 Agriculteur' },
-    { value: 'acheteur', label: '🛒 Acheteur' },
-    { value: 'transporteur', label: '🚚 Transporteur' },
-    { value: 'agent', label: '🤝 Agent relais' },
-    { value: 'admin', label: '🔧 Administrateur' },
-    { value: 'superadmin', label: '⚙️ Super Admin' },
-  ];
-
-  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const role = e.target.value as UserRole | '';
-    if (role && demoUsers[role]) {
-      setPhone(demoUsers[role].phone);
-      setPassword(demoUsers[role].password);
-    } else {
-      setPhone('');
-      setPassword('');
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await login(phone, password);
-      navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Échec de connexion');
-    } finally {
-      setLoading(false);
+  const handleLogin = (role: UserRole) => {
+    login(phone, role);
+    switch (role) {
+      case 'agriculteur': navigate('/agriculteur/dashboard'); break;
+      case 'acheteur': navigate('/acheteur/recherche'); break;
+      case 'agent': navigate('/agent/agriculteurs'); break;
+      case 'admin': navigate('/admin'); break;
+      default: navigate('/');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ backgroundColor: colors.background }}>
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <h2 className="text-2xl font-bold text-center" style={{ color: colors.primary }}>Connexion</h2>
-        </CardHeader>
-        <CardBody>
-          {/* Sélecteur de démo – visible seulement en développement */}
-          {import.meta.env.DEV && (
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-              <Select
-                label="🔐 Compte de test (démo)"
-                options={roleOptions}
-                onChange={handleRoleChange}
-              />
-              <p className="text-xs text-gray-500 mt-1">Sélectionnez un rôle pour pré-remplir les identifiants</p>
-            </div>
-          )}
+    <div className="max-w-md mx-auto bg-white p-8 rounded-xl shadow-md">
+      <h2 className="text-2xl font-bold text-center mb-6 text-green-800">Connexion</h2>
+      
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Numéro de téléphone</label>
+        <input 
+          type="tel" 
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
+          placeholder="034 XX XXX XX"
+        />
+        <p className="text-xs text-gray-500 mt-2">Pour ce MVP, choisissez simplement le rôle avec lequel vous souhaitez tester la plateforme.</p>
+      </div>
 
-          <form onSubmit={handleSubmit}>
-            <Input
-              label="Téléphone"
-              type="tel"
-              placeholder="034 12 345 67"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-              icon="📱"
-            />
-            <Input
-              label="Mot de passe"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              icon="🔒"
-            />
-            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-            <Button type="submit" variant="primary" fullWidth isLoading={loading} className="mt-4">
-              Se connecter
-            </Button>
-          </form>
-          <div className="mt-6 text-center text-sm text-gray-600">
-            Pas encore de compte ?{' '}
-            <Link to="/inscription" className="font-medium" style={{ color: colors.secondary }}>
-              Créer un compte
-            </Link>
-          </div>
-        </CardBody>
-      </Card>
+      <div className="space-y-3">
+        <button onClick={() => handleLogin('agriculteur')} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">
+          Se connecter en tant qu'Agriculteur
+        </button>
+        <button onClick={() => handleLogin('acheteur')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+          Se connecter en tant qu'Acheteur
+        </button>
+        <button onClick={() => handleLogin('agent')} className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg">
+          Se connecter en tant qu'Agent Relais
+        </button>
+        <button onClick={() => handleLogin('admin')} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg">
+          Se connecter en tant qu'Admin
+        </button>
+      </div>
     </div>
   );
 };
+
+export default Connexion;

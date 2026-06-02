@@ -1,57 +1,53 @@
 import { createBrowserRouter } from 'react-router-dom';
+import MainLayout from '../components/layout/MainLayout';
 
 // Pages Publiques
-import { Accueil } from '../pages/public/Accueil';
-import { Connexion } from '../pages/public/Connexion';
-import { Inscription } from '../pages/public/Inscription';
-import { APropos } from '../pages/public/APropos';
-import { MentionsLegales } from '../pages/public/MentionsLegales';
-import { Aide } from '../pages/public/Aide';
-import { Telechargement } from '../pages/public/Telechargement';
+import Accueil from '../pages/public/Accueil';
+import Connexion from '../pages/public/Connexion';
 
-// Dashboards
-import { AgriculteurDashboard } from '../pages/agriculteur/AgriculteurDashboard';
-import { AcheteurDashboard } from '../pages/acheteur/AcheteurDashboard';
-import { TransporteurDashboard } from '../pages/transporteur/TransporteurDashboard';
-import { AgentRelaisDashboard } from '../pages/agent/AgentRelaisDashboard';
-import { AdminDashboard } from '../pages/admin/AdminDashboard';
-import { SuperAdminDashboard } from '../pages/superadmin/SuperAdminDashboard';
+// Pages Communes
+import Prix from '../pages/common/Prix';
+import Meteo from '../pages/common/Meteo';
+import CarteRoutes from '../pages/common/CarteRoutes';
 
-// Routeur temporaire pour afficher les dashboards selon le rôle (Simulation)
-import { useAuth } from '../hooks/useAuth';
+// Pages par Rôle (Agriculteur)
+import DashboardAgriculteur from '../pages/agriculteur/DashboardAgriculteur';
+import PublierOffre from '../pages/agriculteur/PublierOffre';
 
-const DashboardRouter = () => {
-  const { user } = useAuth();
-  
-  // Dans un vrai projet, on redirigerait vers /connexion
-  const role = user?.role || 'agriculteur';
+// Pages par Rôle (Acheteur)
+import DashboardAcheteur from '../pages/acheteur/DashboardAcheteur';
 
-  switch (role) {
-    case 'agriculteur': return <AgriculteurDashboard />;
-    case 'acheteur': return <AcheteurDashboard />;
-    case 'transporteur': return <TransporteurDashboard />;
-    case 'agent': return <AgentRelaisDashboard />;
-    case 'admin': return <AdminDashboard />;
-    case 'superadmin': return <SuperAdminDashboard />;
-    default: return <AgriculteurDashboard />;
-  }
-};
+// Pages par Rôle (Agent)
+import InterfaceAgent from '../pages/agent/InterfaceAgent';
+
+// Pages par Rôle (Admin)
+import DashboardAdmin from '../pages/admin/DashboardAdmin';
 
 export const router = createBrowserRouter([
-  { path: '/', element: <Accueil /> },
-  { path: '/connexion', element: <Connexion /> },
-  { path: '/inscription', element: <Inscription /> },
-  { path: '/a-propos', element: <APropos /> },
-  { path: '/mentions-legales', element: <MentionsLegales /> },
-  { path: '/aide', element: <Aide /> },
-  { path: '/telechargement', element: <Telechargement /> },
-  
-  // Routes de démo directes pour faciliter la visualisation
-  { path: '/dashboard', element: <DashboardRouter /> },
-  { path: '/dashboard/agriculteur', element: <AgriculteurDashboard /> },
-  { path: '/dashboard/acheteur', element: <AcheteurDashboard /> },
-  { path: '/dashboard/transporteur', element: <TransporteurDashboard /> },
-  { path: '/dashboard/agent', element: <AgentRelaisDashboard /> },
-  { path: '/dashboard/admin', element: <AdminDashboard /> },
-  { path: '/dashboard/superadmin', element: <SuperAdminDashboard /> },
+  {
+    path: '/',
+    element: <MainLayout />,
+    children: [
+      { path: '/', element: <Accueil /> },
+      { path: '/connexion', element: <Connexion /> },
+      
+      // Pages Communes
+      { path: '/prix', element: <Prix /> },
+      { path: '/meteo', element: <Meteo /> },
+      { path: '/carte-routes', element: <CarteRoutes /> },
+      
+      // Agriculteur
+      { path: '/agriculteur/dashboard', element: <DashboardAgriculteur /> },
+      { path: '/agriculteur/publier-offre', element: <PublierOffre /> },
+      
+      // Acheteur
+      { path: '/acheteur/recherche', element: <DashboardAcheteur /> },
+      
+      // Agent
+      { path: '/agent/agriculteurs', element: <InterfaceAgent /> },
+      
+      // Admin
+      { path: '/admin', element: <DashboardAdmin /> },
+    ]
+  }
 ]);

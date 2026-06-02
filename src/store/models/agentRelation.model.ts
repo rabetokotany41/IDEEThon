@@ -1,8 +1,8 @@
 export interface AgentFollowup {
   id: string;
-  agentId: string;               // Utilisateur avec rôle 'agent'
-  agriculteurId: string;         // Utilisateur avec rôle 'agriculteur'
+  agentId: string;
+  agriculteurId: string;
   dateDebut: Date;
-  dateFin?: Date;                // Si l'agent ne suit plus
+  dateFin?: Date;
   notes?: string;
 }
