@@ -41,11 +41,48 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
     setLoading(true);
     setError('');
 
-    setTimeout(() => {
-      login(phone, 'agriculteur');
-      navigate('/agriculteur/dashboard');
+    try {
+      const response = await fetch('http://localhost:3000/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, password: otp }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || 'Erreur de connexion');
+        setLoading(false);
+        return;
+      }
+
+      login(data.user, data.access_token);
+      
+      // Redirect based on role
+      switch (data.user.role) {
+        case 'AGRICULTEUR':
+          navigate('/agriculteur/dashboard');
+          break;
+        case 'ACHETEUR':
+          navigate('/acheteur/dashboard');
+          break;
+        case 'TRANSPORTEUR':
+          navigate('/transporteur/dashboard');
+          break;
+        case 'AGENT':
+          navigate('/agent/dashboard');
+          break;
+        case 'ADMIN':
+          navigate('/admin/dashboard');
+          break;
+        default:
+          navigate('/');
+      }
+    } catch (err) {
+      setError('Impossible de se connecter au serveur');
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (

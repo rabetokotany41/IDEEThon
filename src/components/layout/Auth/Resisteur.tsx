@@ -64,26 +64,51 @@ const Register: React.FC<RegisterProps> = ({ onNavigate }) => {
     if (!role) return;
 
     setLoading(true);
+    setError('');
 
-    setTimeout(() => {
-      login(phone, role as any);
+    try {
+      const response = await fetch('http://localhost:3000/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          phone, 
+          password: otp, // using OTP as initial password 
+          role: role.toUpperCase(), 
+          fullName: profile.fullName || 'Nouvel Utilisateur'
+        }),
+      });
 
-      switch (role) {
-        case 'agriculteur':
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || 'Erreur lors de l\'inscription');
+        setLoading(false);
+        return;
+      }
+
+      login(data.user, data.access_token);
+
+      switch (data.user.role) {
+        case 'AGRICULTEUR':
           navigate('/agriculteur/dashboard');
           break;
-        case 'acheteur':
-          navigate('/acheteur/recherche');
+        case 'ACHETEUR':
+          navigate('/acheteur/dashboard');
           break;
-        case 'agent':
-          navigate('/agent/agriculteurs');
+        case 'TRANSPORTEUR':
+          navigate('/transporteur/dashboard');
+          break;
+        case 'AGENT':
+          navigate('/agent/dashboard');
           break;
         default:
           navigate('/');
       }
-
+    } catch (err) {
+      setError('Impossible de se connecter au serveur');
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (

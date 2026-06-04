@@ -165,7 +165,7 @@ const Home: React.FC = () => {
       </AnimatePresence>
 
       {/* HEADER (z-index 30) */}
-      <header className="absolute top-0 w-full h-24 z-30 flex items-center justify-between px-8 md:px-[10%] bg-black/30 backdrop-blur-sm">
+      <header className="absolute top-0 w-full h-24 z-30 flex items-center justify-between px-8 md:px-[10%] backdrop-blur-sm">
         <div className="flex items-center gap-2 text-xl font-serif cursor-pointer" onClick={() => handleNavClick("home")}>
           <img src={Logo} alt="Logo" className="w-8 h-8 rounded-full object-cover" />
           AgriConnect
@@ -230,7 +230,7 @@ const Home: React.FC = () => {
 
       {/* DOTS VERTICAUX (z-index 20) */}
       {activePage === "home" && (
-        <div className="absolute left-6 top-1/2 -translate-y-1/2 z-20 hidden md:flex flex-col items-center gap-3 text-white rounded-full bg-black/40 px-3 py-4 backdrop-blur-md border border-white/20 shadow-lg">
+        <div className="absolute left-6 top-1/2 -translate-y-1/2 z-20 hidden md:flex flex-col items-center gap-3 text-white rounded-full bg-black/40 px-3 py-1 backdrop-blur-md border border-white/20 shadow-lg">
           <button onClick={() => setActiveCard((prev) => Math.max(0, prev - 1))} className="p-1 cursor-pointer hover:text-green-400 transition">
           </button>
           <div className="flex flex-col items-center gap-2">

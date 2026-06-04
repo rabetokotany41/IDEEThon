@@ -3,13 +3,70 @@ import { motion } from "framer-motion";
 import Agricol1 from "../../assets/images/agricol1.jpeg";
 import Agricol2 from "../../assets/images/agricol2.jpeg";
 import Agricol3 from "../../assets/images/agricol3.jpeg";
-
+import Agricol4 from "../../assets/images/agricol4.jpeg";
 const Agricol: React.FC = () => {
-  const cards = [
-    { id: 0, title: "Semences de qualité", desc: "Trouvez les meilleures semences pour vos champs", img: Agricol1 },
-    { id: 1, title: "Matériel Agricole", desc: "Louez ou achetez des équipements modernes", img: Agricol2 },
-    { id: 2, title: "Marché B2B", desc: "Connectez-vous directement avec les acheteurs", img: Agricol3 },
-  ];
+ const cards = [
+  {
+    id: 0,
+    title: "Vanille de Madagascar",
+    desc: "Culture d’exportation parmi les plus précieuses au monde.",
+    img: Agricol1,
+  },
+  {
+    id: 1,
+    title: "Riz",
+    desc: "Aliment de base cultivé partout dans les hautes terres.",
+    img: Agricol2,
+  },
+  {
+    id: 2,
+    title: "Café",
+    desc: "Production des régions côtières et des hautes terres.",
+    img: Agricol3,
+  },
+  {
+    id: 3,
+    title: "Clou de girofle",
+    desc: "Spécialité des régions de la côte Est.",
+    img: Agricol4,
+  },
+  {
+    id: 4,
+    title: "Litchi",
+    desc: "Fruit très exporté surtout pendant la saison de Noël.",
+    img: Agricol1,
+  },
+  {
+    id: 5,
+    title: "Cacao",
+    desc: "Cultivé dans les zones humides de Madagascar.",
+    img: Agricol2,
+  },
+  {
+    id: 6,
+    title: "Canne à sucre",
+    desc: "Utilisée pour le sucre et le rhum local.",
+    img: Agricol3,
+  },
+  {
+    id: 7,
+    title: "Maïs",
+    desc: "Culture vivrière importante dans plusieurs régions.",
+    img: Agricol4,
+  },
+  {
+    id: 8,
+    title: "Haricot",
+    desc: "Légumineuse essentielle dans l’alimentation locale.",
+    img: Agricol1,
+  },
+  {
+    id: 9,
+    title: "Manioc",
+    desc: "Plante résistante très cultivée dans le sud de Madagascar.",
+    img: Agricol2,
+  },
+];
 
   return (
     <div className="w-full">
