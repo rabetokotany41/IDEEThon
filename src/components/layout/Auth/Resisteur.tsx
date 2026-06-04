@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Tractor, ShoppingBag, Truck, Users } from 'lucide-react';
-import colors from '../../common/colors';
+import { CheckCircle, Tractor, ShoppingBag, Truck, Users, AlertCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../../../hooks/useAuth';
 
 type Role = 'agriculteur' | 'acheteur' | 'transporteur' | 'agent';
 
-const Register: React.FC = () => {
+interface RegisterProps {
+  onNavigate?: (page: string) => void;
+}
+
+const Register: React.FC<RegisterProps> = ({ onNavigate }) => {
   const { login } = useAuth();
   const [step, setStep] = useState<'phone' | 'otp' | 'role' | 'profile'>('phone');
   const [phone, setPhone] = useState('');
@@ -83,186 +87,193 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-transparent"
-          style={{ backgroundColor: colors.primaryDark }}>
-      <div className="max-w-md w-full backdrop-blur-sm rounded-xl shadow-md p-6 space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8 }}
+      className="w-full max-w-md bg-white/10 backdrop-blur-md p-8 md:p-10 rounded-2xl border border-white/20 shadow-2xl mx-auto text-white"
+    >
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-serif mb-2">Créer mon compte</h1>
+        <p className="text-white/70 text-sm">Rejoignez AgriConnect</p>
+      </div>
 
-        <h1
-          className="text-2xl font-bold text-center"
-          style={{ color: colors.primary }}
-        >
-          Créer mon compte
-        </h1>
-
-        {/* STEP PHONE */}
-        {step === 'phone' && (
-          <div className="space-y-4">
-            <label className="text-sm">Numéro de téléphone</label>
-
-            <div className="flex border rounded-md overflow-hidden">
-              <span className="bg-gray-100 px-3 py-2">+261</span>
-
+      {/* STEP PHONE */}
+      {step === 'phone' && (
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm text-white/70 mb-2">Numéro de téléphone</label>
+            <div className="flex items-center bg-black/30 border border-white/20 rounded-lg overflow-hidden focus-within:border-green-400 transition">
+              <span className="bg-black/50 px-4 py-3 text-white/70 border-r border-white/20">+261</span>
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) =>
-                  setPhone(e.target.value.replace(/\D/g, ''))
-                }
-                className="flex-1 px-3 py-2 outline-none bg-transparent"
-                placeholder="341234567"
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                className="flex-1 px-4 py-3 bg-transparent outline-none text-white placeholder-white/50 text-sm"
+                placeholder="34 12 345 67"
               />
             </div>
-
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-
-            <button
-              onClick={requestOtp}
-              className="w-full py-2 rounded-md text-white"
-              style={{ backgroundColor: colors.primary }}
-            >
-              Envoyer le code
-            </button>
           </div>
-        )}
 
-        {/* STEP OTP */}
-        {step === 'otp' && (
-          <div className="space-y-4">
-            <label>Code reçu par SMS</label>
+          {error && (
+            <div className="flex items-center space-x-2 text-red-400">
+              <AlertCircle size={16} />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
 
+          <button
+            onClick={requestOtp}
+            disabled={loading}
+            className="w-full py-4 mt-2 border border-green-400 text-green-400 font-bold uppercase text-sm tracking-widest hover:bg-green-400 hover:text-black transition-colors rounded-lg disabled:opacity-50"
+          >
+            {loading ? 'Envoi...' : 'Envoyer le code'}
+          </button>
+        </div>
+      )}
+
+      {/* STEP OTP */}
+      {step === 'otp' && (
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm text-white/70 mb-2">Code reçu par SMS</label>
             <input
               type="text"
               value={otp}
               onChange={(e) => setOtp(e.target.value.slice(0, 6))}
-              className="w-full border rounded-md px-3 py-2 bg-transparent"
+              className="w-full bg-black/30 border border-white/20 p-4 rounded-lg focus:outline-none focus:border-green-400 transition text-sm text-white placeholder-white/50 text-center tracking-widest"
               placeholder="123456"
             />
-
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-
-            <button
-              onClick={verifyOtp}
-              className="w-full py-2 rounded-md text-white"
-              style={{ backgroundColor: colors.secondary }}
-            >
-              Vérifier
-            </button>
           </div>
-        )}
 
-        {/* STEP ROLE */}
-        {step === 'role' && (
-          <div className="space-y-4">
-            <p>Choisissez votre profil :</p>
-
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { value: 'agriculteur', label: 'Agriculteur', icon: Tractor },
-                { value: 'acheteur', label: 'Acheteur', icon: ShoppingBag },
-                { value: 'transporteur', label: 'Transporteur', icon: Truck },
-                { value: 'agent', label: 'Agent', icon: Users },
-              ].map((r) => (
-                <button
-                  key={r.value}
-                  onClick={() => {
-                    setRole(r.value as Role);
-                    setStep('profile');
-                  }}
-                  className="flex flex-col items-center p-3 border rounded-lg hover:bg-green-50"
-                >
-                  <r.icon size={26} style={{ color: colors.primary }} />
-                  <span className="text-sm">{r.label}</span>
-                </button>
-              ))}
+          {error && (
+            <div className="flex items-center space-x-2 text-red-400">
+              <AlertCircle size={16} />
+              <span className="text-sm">{error}</span>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* STEP PROFILE */}
-        {step === 'profile' && role && (
-          <div className="space-y-4">
-            <h2 className="font-semibold text-lg">Profil</h2>
+          <button
+            onClick={verifyOtp}
+            disabled={loading}
+            className="w-full py-4 mt-2 bg-green-400 text-black font-bold uppercase text-sm tracking-widest hover:bg-green-500 transition-colors rounded-lg disabled:opacity-50"
+          >
+            {loading ? 'Vérification...' : 'Vérifier'}
+          </button>
+        </div>
+      )}
 
-            <input
-              type="text"
-              placeholder="Nom complet"
-              value={profile.fullName}
-              onChange={(e) =>
-                setProfile({ ...profile, fullName: e.target.value })
-              }
-              className="w-full border rounded-md px-3 py-2 bg-transparent"
-            />
-
-            <input
-              type="text"
-              placeholder="Région"
-              value={profile.region}
-              onChange={(e) =>
-                setProfile({ ...profile, region: e.target.value })
-              }
-              className="w-full border rounded-md px-3 py-2 bg-transparent"
-            />
-
-            <input
-              type="text"
-              placeholder="Village"
-              value={profile.village}
-              onChange={(e) =>
-                setProfile({ ...profile, village: e.target.value })
-              }
-              className="w-full border rounded-md px-3 py-2 bg-transparent"
-            />
-
-            {role === 'agriculteur' && (
-              <input
-                type="text"
-                placeholder="Cultures (riz, maïs...)"
-                value={profile.productTypes.join(', ')}
-                onChange={(e) =>
-                  setProfile({
-                    ...profile,
-                    productTypes: e.target.value
-                      .split(',')
-                      .map((s) => s.trim()),
-                  })
-                }
-                className="w-full border rounded-md px-3 py-2 bg-transparent"
-              />
-            )}
-
-            {role === 'transporteur' && (
-              <select
-                value={profile.vehicleType}
-                onChange={(e) =>
-                  setProfile({ ...profile, vehicleType: e.target.value })
-                }
-                className="w-full border rounded-md p-2 bg-transparent"
+      {/* STEP ROLE */}
+      {step === 'role' && (
+        <div className="space-y-5">
+          <p className="text-sm text-white/70">Choisissez votre profil :</p>
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { value: 'agriculteur', label: 'Agriculteur', icon: Tractor },
+              { value: 'acheteur', label: 'Acheteur', icon: ShoppingBag },
+              { value: 'transporteur', label: 'Transporteur', icon: Truck },
+              { value: 'agent', label: 'Agent', icon: Users },
+            ].map((r) => (
+              <button
+                key={r.value}
+                onClick={() => {
+                  setRole(r.value as Role);
+                  setStep('profile');
+                }}
+                className="flex flex-col items-center p-4 bg-black/30 border border-white/20 rounded-xl hover:border-green-400 hover:bg-white/10 transition"
               >
-                <option value="">Type de véhicule</option>
-                <option>Charrette</option>
-                <option>Pick-up</option>
-                <option>Camion</option>
-                <option>Moto</option>
-              </select>
-            )}
-
-            <button
-              onClick={submitProfile}
-              disabled={loading}
-              className="w-full py-2 rounded-md text-white flex items-center justify-center"
-              style={{ backgroundColor: colors.success }}
-            >
-              {loading ? 'Inscription...' : (
-                <>
-                  <CheckCircle size={18} className="mr-2" />
-                  Terminer
-                </>
-              )}
-            </button>
+                <r.icon size={26} className="text-green-400 mb-2" />
+                <span className="text-sm text-white/90">{r.label}</span>
+              </button>
+            ))}
           </div>
-        )}
+        </div>
+      )}
+
+      {/* STEP PROFILE */}
+      {step === 'profile' && role && (
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Nom complet"
+            value={profile.fullName}
+            onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
+            className="w-full bg-black/30 border border-white/20 p-4 rounded-lg focus:outline-none focus:border-green-400 transition text-sm text-white placeholder-white/50"
+          />
+
+          <input
+            type="text"
+            placeholder="Région"
+            value={profile.region}
+            onChange={(e) => setProfile({ ...profile, region: e.target.value })}
+            className="w-full bg-black/30 border border-white/20 p-4 rounded-lg focus:outline-none focus:border-green-400 transition text-sm text-white placeholder-white/50"
+          />
+
+          <input
+            type="text"
+            placeholder="Village"
+            value={profile.village}
+            onChange={(e) => setProfile({ ...profile, village: e.target.value })}
+            className="w-full bg-black/30 border border-white/20 p-4 rounded-lg focus:outline-none focus:border-green-400 transition text-sm text-white placeholder-white/50"
+          />
+
+          {role === 'agriculteur' && (
+            <input
+              type="text"
+              placeholder="Cultures (riz, maïs...)"
+              value={profile.productTypes.join(', ')}
+              onChange={(e) =>
+                setProfile({
+                  ...profile,
+                  productTypes: e.target.value.split(',').map((s) => s.trim()),
+                })
+              }
+              className="w-full bg-black/30 border border-white/20 p-4 rounded-lg focus:outline-none focus:border-green-400 transition text-sm text-white placeholder-white/50"
+            />
+          )}
+
+          {role === 'transporteur' && (
+            <select
+              value={profile.vehicleType}
+              onChange={(e) => setProfile({ ...profile, vehicleType: e.target.value })}
+              className="w-full bg-black/30 border border-white/20 p-4 rounded-lg focus:outline-none focus:border-green-400 transition text-sm text-white/70"
+            >
+              <option value="" className="bg-gray-800">Type de véhicule</option>
+              <option className="bg-gray-800">Charrette</option>
+              <option className="bg-gray-800">Pick-up</option>
+              <option className="bg-gray-800">Camion</option>
+              <option className="bg-gray-800">Moto</option>
+            </select>
+          )}
+
+          <button
+            onClick={submitProfile}
+            disabled={loading}
+            className="w-full py-4 mt-2 bg-green-400 text-black font-bold uppercase text-sm tracking-widest hover:bg-green-500 transition-colors rounded-lg disabled:opacity-50 flex items-center justify-center"
+          >
+            {loading ? 'Création...' : (
+              <>
+                <CheckCircle size={18} className="mr-2" />
+                Terminer l'inscription
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* LINK TO LOGIN */}
+      <div className="mt-8 pt-6 border-t border-white/20 text-center">
+        <p className="text-sm text-white/70">
+          Déjà inscrit ?{' '}
+          <button
+            onClick={() => onNavigate && onNavigate('login')}
+            className="text-green-400 font-bold hover:text-green-300 transition"
+          >
+            Se connecter
+          </button>
+        </p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

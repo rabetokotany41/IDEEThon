@@ -4,12 +4,6 @@ import MainLayout from '../components/layout/MainLayout';
 // Pages Publiques
 import Accueil from '../pages/public/Home';
 
-
-// AUTH
-import Connexion from '../components/layout/Auth/Login';
-import Inscription from '../components/layout/Auth/Resisteur';
-import ForgotPassword from '../components/layout/Auth/ForgotPassword';
-
 // Pages Communes
 import Prix from '../pages/common/Prix';
 import Meteo from '../pages/common/Meteo';
@@ -33,12 +27,8 @@ export const router = createBrowserRouter([
     path: '/',
     element: <MainLayout />,
     children: [
-      // Public
+      // Public (Home handles Contact, Agricol, Login, Register, Forgot Password internally)
       { path: '/', element: <Accueil /> },
-      // AUTH
-      { path: '/connexion', element: <Connexion /> },
-      { path: '/inscription', element: <Inscription /> },
-      { path: '/forgot-password', element: <ForgotPassword /> },
 
       // Communes
       { path: '/prix', element: <Prix /> },
@@ -57,7 +47,6 @@ export const router = createBrowserRouter([
 
       // Admin
       { path: '/admin', element: <DashboardAdmin /> },
-
     ],
   },
 ]);

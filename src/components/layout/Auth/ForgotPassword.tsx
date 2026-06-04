@@ -1,14 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import {
-  Send,
-  CheckCircle,
-  AlertCircle,
-  ArrowLeft,
-} from 'lucide-react';
-import colors from '../../common/colors';
+import { useNavigate } from 'react-router-dom';
+import { Send, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-const ForgotPassword: React.FC = () => {
+const ForgotPassword: React.FC<{ onNavigate?: (page: string) => void }> = ({ onNavigate }) => {
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
@@ -43,18 +38,13 @@ const ForgotPassword: React.FC = () => {
         throw new Error(data.message || 'Numéro non enregistré');
       }
 
-      setSuccessMsg(
-        'Un code de réinitialisation a été envoyé par SMS.'
-      );
-
+      setSuccessMsg('Un code de réinitialisation a été envoyé par SMS.');
       setStep('otp');
     } catch (err: any) {
       setError(err.message || 'Erreur réseau');
 
       if (!navigator.onLine) {
-        setError(
-          'Mode hors ligne : impossible d’envoyer le code.'
-        );
+        setError('Mode hors ligne : impossible d’envoyer le code.');
       }
     } finally {
       setLoading(false);
@@ -89,10 +79,7 @@ const ForgotPassword: React.FC = () => {
       const data = await res.json();
 
       localStorage.setItem('token', data.token);
-      localStorage.setItem(
-        'user',
-        JSON.stringify(data.user)
-      );
+      localStorage.setItem('user', JSON.stringify(data.user));
 
       navigate(
         data.user.role === 'agriculteur'
@@ -107,187 +94,130 @@ const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4 py-12"
-            style={{ backgroundColor: colors.primaryDark }}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8 }}
+      className="w-full max-w-md bg-white/10 backdrop-blur-md p-8 md:p-10 rounded-2xl border border-white/20 shadow-2xl mx-auto text-white"
     >
-      <div className="w-full max-w-md space-y-6">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-serif mb-2">Mot de passe oublié</h1>
+        <p className="text-white/70 text-sm">Réinitialisez votre accès</p>
+      </div>
 
-        <div className="text-center">
-          <h1
-            className="text-3xl font-bold"
-            style={{ color: colors.primary }}
-          >
-            Mot de passe oublié
-          </h1>
-
-          <p className="text-gray-500 mt-2">
-            Réinitialisez votre accès avec votre numéro
-          </p>
-        </div>
-
-        {step === 'phone' ? (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm text-white mb-1">
-                Téléphone enregistré
-              </label>
-
-              <div
-                className="flex items-center border rounded-lg overflow-hidden"
-                style={{ borderColor: colors.border }}
-              >
-                <span className="bg-gray-100 px-4 py-3">
-                  +261
-                </span>
-
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) =>
-                    setPhone(
-                      e.target.value.replace(/\D/g, '')
-                    )
-                  }
-                  placeholder="341234567"
-                  className="flex-1 px-4 py-3 bg-transparent outline-none"
-                />
-              </div>
-
-              <p className="text-xs text-gray-400 mt-1">
-                Numéro utilisé lors de l'inscription
-              </p>
-            </div>
-
-            {error && (
-              <div className="flex items-center gap-2 text-red-600">
-                <AlertCircle size={16} />
-                <span className="text-sm">{error}</span>
-              </div>
-            )}
-
-            {successMsg && (
-              <div className="flex items-center gap-2 text-green-600">
-                <CheckCircle size={16} />
-                <span className="text-sm">
-                  {successMsg}
-                </span>
-              </div>
-            )}
-
-            <button
-              onClick={requestResetOtp}
-              disabled={loading}
-              className="w-full py-3 rounded-lg text-white font-semibold flex items-center justify-center"
-              style={{
-                backgroundColor: colors.secondary,
-                opacity: loading ? 0.7 : 1,
-              }}
-            >
-              {loading ? (
-                'Envoi en cours...'
-              ) : (
-                <>
-                  <Send size={18} className="mr-2" />
-                  Envoyer le code
-                </>
-              )}
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-
-            <div>
-              <label className="block text-sm text-gray-700 mb-1">
-                Code reçu par SMS
-              </label>
-
+      {step === 'phone' ? (
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm text-white/70 mb-2">Téléphone enregistré</label>
+            <div className="flex items-center bg-black/30 border border-white/20 rounded-lg overflow-hidden focus-within:border-green-400 transition">
+              <span className="bg-black/50 px-4 py-3 text-white/70 border-r border-white/20">+261</span>
               <input
-                type="text"
-                value={otp}
-                onChange={(e) =>
-                  setOtp(
-                    e.target.value
-                      .replace(/\D/g, '')
-                      .slice(0, 6)
-                  )
-                }
-                placeholder="123456"
-                className="w-full border rounded-lg px-4 py-3 bg-transparent outline-none"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                placeholder="34 12 345 67"
+                className="flex-1 px-4 py-3 bg-transparent outline-none text-white placeholder-white/50 text-sm"
               />
-
-              <p className="text-xs text-gray-400 mt-1">
-                Valable pendant 10 minutes
-              </p>
             </div>
-
-            {error && (
-              <div className="flex items-center gap-2 text-red-600">
-                <AlertCircle size={16} />
-                <span className="text-sm">{error}</span>
-              </div>
-            )}
-
-            <button
-              onClick={verifyResetOtp}
-              disabled={loading}
-              className="w-full py-3 rounded-lg text-white font-semibold flex items-center justify-center"
-              style={{
-                backgroundColor: colors.success,
-              }}
-            >
-              {loading ? (
-                'Vérification...'
-              ) : (
-                <>
-                  <CheckCircle
-                    size={18}
-                    className="mr-2"
-                  />
-                  Réinitialiser et me connecter
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={() => {
-                setStep('phone');
-                setOtp('');
-                setError('');
-                setSuccessMsg('');
-              }}
-              className="w-full text-sm text-gray-500 hover:underline"
-            >
-              ← Changer de numéro
-            </button>
           </div>
-        )}
 
+          {error && (
+            <div className="flex items-center space-x-2 text-red-400">
+              <AlertCircle size={16} />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
+
+          {successMsg && (
+            <div className="flex items-center space-x-2 text-green-400">
+              <CheckCircle size={16} />
+              <span className="text-sm">{successMsg}</span>
+            </div>
+          )}
+
+          <button
+            onClick={requestResetOtp}
+            disabled={loading}
+            className="w-full py-4 mt-2 border border-green-400 text-green-400 font-bold uppercase text-sm tracking-widest hover:bg-green-400 hover:text-black transition-colors rounded-lg disabled:opacity-50 flex items-center justify-center"
+          >
+            {loading ? 'Envoi...' : (
+              <>
+                <Send size={18} className="mr-2" />
+                Envoyer le code
+              </>
+            )}
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm text-white/70 mb-2">Code reçu par SMS</label>
+            <input
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="123456"
+              className="w-full bg-black/30 border border-white/20 p-4 rounded-lg focus:outline-none focus:border-green-400 transition text-sm text-white placeholder-white/50 text-center tracking-widest"
+            />
+            <p className="text-xs text-white/50 mt-2 text-center">Valable pendant 10 minutes</p>
+          </div>
+
+          {error && (
+            <div className="flex items-center space-x-2 text-red-400">
+              <AlertCircle size={16} />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
+
+          <button
+            onClick={verifyResetOtp}
+            disabled={loading}
+            className="w-full py-4 mt-2 bg-green-400 text-black font-bold uppercase text-sm tracking-widest hover:bg-green-500 transition-colors rounded-lg disabled:opacity-50 flex items-center justify-center"
+          >
+            {loading ? 'Vérification...' : (
+              <>
+                <CheckCircle size={18} className="mr-2" />
+                Réinitialiser et connecter
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={() => {
+              setStep('phone');
+              setOtp('');
+              setError('');
+              setSuccessMsg('');
+            }}
+            className="w-full text-sm text-white/50 hover:text-white transition underline text-center"
+          >
+            ← Changer de numéro
+          </button>
+        </div>
+      )}
+
+      <div className="mt-8 pt-6 border-t border-white/20 space-y-4">
         <div className="text-center">
           <button
-            onClick={() => navigate('/connexion')}
-            className="inline-flex items-center text-green-700 hover:underline"
+            onClick={() => onNavigate ? onNavigate('login') : navigate('/connexion')}
+            className="inline-flex items-center text-white/50 hover:text-white transition text-sm"
           >
-            <ArrowLeft size={14} className="mr-1" />
+            <ArrowLeft size={14} className="mr-2" />
             Retour à la connexion
           </button>
         </div>
 
-        <div className="flex flex-col items-center gap-2 pt-2">
-          <p className="text-sm text-gray-500">
-            Vous n'avez pas encore de compte ?
-          </p>
-
-          <Link
-            to="/inscription"
-            className="text-green-700 font-medium hover:underline"
+        <p className="text-center text-sm text-white/70">
+          Pas encore inscrit ?{' '}
+          <button
+            onClick={() => onNavigate ? onNavigate('register') : navigate('/inscription')}
+            className="text-green-400 font-bold hover:text-green-300 transition"
           >
-            Inscrivez-vous
-          </Link>
-        </div>
-
+            Créer un compte
+          </button>
+        </p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, CheckCircle, AlertCircle } from 'lucide-react';
-import colors from '../../common/colors';
+import { AlertCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../../../hooks/useAuth';
 
-const Login: React.FC = () => {
+interface LoginProps {
+  onNavigate?: (page: string) => void;
+}
+
+const Login: React.FC<LoginProps> = ({ onNavigate }) => {
   const { login } = useAuth();
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
@@ -45,117 +49,103 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-transparent"
-      style={{ backgroundColor: colors.primaryDark }}>
-      <div className="max-w-md w-full backdrop-blur-sm rounded-xl shadow-lg p-6 space-y-6">
-        
-        <div className="text-center">
-          <h1 className="text-2xl font-bold" style={{ color: colors.primary }}>
-            AgriConnect Madagascar
-          </h1>
-          <p className="text-gray-500 mt-1">
-            Connectez-vous avec votre numéro
-          </p>
-        </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8 }}
+      className="w-full max-w-md bg-white/10 backdrop-blur-md p-8 md:p-10 rounded-2xl border border-white/20 shadow-2xl mx-auto text-white"
+    >
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-serif mb-2">AgriConnect</h1>
+        <p className="text-white/70 text-sm">Connectez-vous avec votre numéro</p>
+      </div>
 
-        {step === 'phone' ? (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm text-white">Téléphone</label>
-
-              <div
-                className="mt-1 flex items-center border rounded-md overflow-hidden"
-                style={{ borderColor: colors.border }}
-              >
-                <span className="bg-gray-100 px-3 py-2 text-gray-600">
-                  +261
-                </span>
-
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) =>
-                    setPhone(e.target.value.replace(/\D/g, ''))
-                  }
-                  placeholder="34 12 345 67"
-                  className="flex-1 px-3 py-2 outline-none bg-transparent"
-                />
-              </div>
+      {step === 'phone' ? (
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm text-white/70 mb-2">Téléphone</label>
+            <div className="flex items-center bg-black/30 border border-white/20 rounded-lg overflow-hidden focus-within:border-green-400 transition">
+              <span className="bg-black/50 px-4 py-3 text-white/70 border-r border-white/20">+261</span>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                placeholder="34 12 345 67"
+                className="flex-1 px-4 py-3 bg-transparent outline-none text-white placeholder-white/50 text-sm"
+              />
             </div>
-
-            {error && (
-              <div className="flex items-center space-x-2 text-red-600">
-                <AlertCircle size={16} />
-                <span className="text-sm">{error}</span>
-              </div>
-            )}
-
-            <button
-              onClick={requestOtp}
-              disabled={loading}
-              className="w-full py-3 rounded-md text-white font-semibold"
-              style={{
-                backgroundColor: colors.primary,
-                opacity: loading ? 0.7 : 1,
-              }}
-            >
-              {loading ? 'Envoi...' : 'Recevoir le code SMS'}
-            </button>
           </div>
-        ) : (
-          <div className="space-y-4">
+
+          {error && (
+            <div className="flex items-center space-x-2 text-red-400">
+              <AlertCircle size={16} />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
+
+          <button
+            onClick={requestOtp}
+            disabled={loading}
+            className="w-full py-4 mt-2 border border-green-400 text-green-400 font-bold uppercase text-sm tracking-widest hover:bg-green-400 hover:text-black transition-colors rounded-lg disabled:opacity-50"
+          >
+            {loading ? 'Envoi...' : 'Recevoir le code SMS'}
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm text-white/70 mb-2">Code reçu par SMS</label>
             <input
               type="text"
               value={otp}
               onChange={(e) => setOtp(e.target.value.slice(0, 6))}
               placeholder="123456"
-              className="w-full border rounded-md px-3 py-2 bg-transparent outline-none"
+              className="w-full bg-black/30 border border-white/20 p-4 rounded-lg focus:outline-none focus:border-green-400 transition text-sm text-white placeholder-white/50 text-center tracking-widest"
             />
-
-            {error && (
-              <div className="flex items-center space-x-2 text-red-600">
-                <AlertCircle size={16} />
-                <span className="text-sm">{error}</span>
-              </div>
-            )}
-
-            <button
-              onClick={verifyOtp}
-              disabled={loading}
-              className="w-full py-3 rounded-md text-white font-semibold"
-              style={{ backgroundColor: colors.secondary }}
-            >
-              {loading ? 'Vérification...' : 'Se connecter'}
-            </button>
-
-            <button
-              onClick={() => {
-                setStep('phone');
-                setOtp('');
-                setError('');
-              }}
-              className="w-full text-sm text-gray-500 underline"
-            >
-              ← Changer de numéro
-            </button>
           </div>
-        )}
 
-        <p className="text-center text-xs text-gray-400">
+          {error && (
+            <div className="flex items-center space-x-2 text-red-400">
+              <AlertCircle size={16} />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
+
+          <button
+            onClick={verifyOtp}
+            disabled={loading}
+            className="w-full py-4 mt-2 bg-green-400 text-black font-bold uppercase text-sm tracking-widest hover:bg-green-500 transition-colors rounded-lg disabled:opacity-50"
+          >
+            {loading ? 'Vérification...' : 'Se connecter'}
+          </button>
+
+          <button
+            onClick={() => {
+              setStep('phone');
+              setOtp('');
+              setError('');
+            }}
+            className="w-full text-sm text-white/50 hover:text-white transition underline text-center"
+          >
+            ← Changer de numéro
+          </button>
+        </div>
+      )}
+
+      <div className="mt-8 pt-6 border-t border-white/20 space-y-4">
+        <p className="text-center text-sm text-white/70">
           Pas encore inscrit ?{' '}
-          <a href="/inscription" className="text-green-700">
+          <button onClick={() => onNavigate && onNavigate('register')} className="text-green-400 hover:text-green-300 font-bold transition">
             Créer un compte
-          </a>
+          </button>
         </p>
-        <div>
-          <p>
-            <a href="/forgot-password" className="text-green-700 text-sm">
-              Mot de passe oublié ?
-            </a>
-          </p>
+        <div className="text-center">
+          <button onClick={() => onNavigate && onNavigate('forgot-password')} className="text-white/50 hover:text-white text-sm transition">
+            Mot de passe oublié ?
+          </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
