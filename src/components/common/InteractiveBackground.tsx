@@ -229,14 +229,9 @@ const RainWithElectricity: React.FC = () => {
       if (arc.intensity > maxIntensity) maxIntensity = arc.intensity;
     }
     if (maxIntensity > 0.15) {
-  // Flash blanc très doux (plus lumineux)
-  ctx.fillStyle = `rgba(240, 250, 255, ${maxIntensity * 0.2})`;
-  ctx.fillRect(0, 0, w, h);
-
-  // Voile bleu ciel très léger (effet air frais)
-  ctx.fillStyle = `rgba(180, 220, 255, ${maxIntensity * 0.08})`;
-  ctx.fillRect(0, 0, w, h);
-}
+      ctx.fillStyle = `rgba(180, 220, 255, ${maxIntensity * 0.08})`;
+      ctx.fillRect(0, 0, w, h);
+    }
   };
 
   const updateDrops = (w: number, h: number) => {

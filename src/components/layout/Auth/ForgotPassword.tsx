@@ -138,7 +138,7 @@ const ForgotPassword: React.FC<{ onNavigate?: (page: string) => void }> = ({ onN
           <button
             onClick={requestResetOtp}
             disabled={loading}
-            className="w-full py-4 mt-2 border border-green-400 text-green-400 font-bold uppercase text-sm tracking-widest hover:bg-green-400 hover:text-black transition-colors rounded-lg disabled:opacity-50 flex items-center justify-center"
+            className="w-full py-4 mt-2 cursor-pointer border border-green-400 text-green-400 font-bold uppercase text-sm tracking-widest hover:bg-green-400 hover:text-black transition-colors rounded-lg disabled:opacity-50 flex items-center justify-center"
           >
             {loading ? 'Envoi...' : (
               <>
@@ -172,7 +172,7 @@ const ForgotPassword: React.FC<{ onNavigate?: (page: string) => void }> = ({ onN
           <button
             onClick={verifyResetOtp}
             disabled={loading}
-            className="w-full py-4 mt-2 bg-green-400 text-black font-bold uppercase text-sm tracking-widest hover:bg-green-500 transition-colors rounded-lg disabled:opacity-50 flex items-center justify-center"
+            className="w-full py-4 mt-2 cursor-pointer bg-green-400 text-black font-bold uppercase text-sm tracking-widest hover:bg-green-500 transition-colors rounded-lg disabled:opacity-50 flex items-center justify-center"
           >
             {loading ? 'Vérification...' : (
               <>
@@ -189,7 +189,7 @@ const ForgotPassword: React.FC<{ onNavigate?: (page: string) => void }> = ({ onN
               setError('');
               setSuccessMsg('');
             }}
-            className="w-full text-sm text-white/50 hover:text-white transition underline text-center"
+            className="w-full cursor-pointer text-sm text-white/50 hover:text-white transition underline text-center"
           >
             ← Changer de numéro
           </button>
@@ -200,7 +200,7 @@ const ForgotPassword: React.FC<{ onNavigate?: (page: string) => void }> = ({ onN
         <div className="text-center">
           <button
             onClick={() => onNavigate ? onNavigate('login') : navigate('/connexion')}
-            className="inline-flex items-center text-white/50 hover:text-white transition text-sm"
+            className="cursor-pointer inline-flex items-center text-white/50 hover:text-white transition text-sm"
           >
             <ArrowLeft size={14} className="mr-2" />
             Retour à la connexion
@@ -211,7 +211,7 @@ const ForgotPassword: React.FC<{ onNavigate?: (page: string) => void }> = ({ onN
           Pas encore inscrit ?{' '}
           <button
             onClick={() => onNavigate ? onNavigate('register') : navigate('/inscription')}
-            className="text-green-400 font-bold hover:text-green-300 transition"
+            className="cursor-pointer text-green-400 font-bold hover:text-green-300 transition"
           >
             Créer un compte
           </button>

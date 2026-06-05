@@ -123,7 +123,7 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
           <button
             onClick={requestOtp}
             disabled={loading}
-            className="w-full py-4 mt-2 border border-green-400 text-green-400 font-bold uppercase text-sm tracking-widest hover:bg-green-400 hover:text-black transition-colors rounded-lg disabled:opacity-50"
+            className="w-full py-4 mt-2 border cursor-pointer border-green-400 text-green-400 font-bold uppercase text-sm tracking-widest hover:bg-green-400 hover:text-black transition-colors rounded-lg disabled:opacity-50"
           >
             {loading ? 'Envoi...' : 'Recevoir le code SMS'}
           </button>
@@ -151,7 +151,7 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
           <button
             onClick={verifyOtp}
             disabled={loading}
-            className="w-full py-4 mt-2 bg-green-400 text-black font-bold uppercase text-sm tracking-widest hover:bg-green-500 transition-colors rounded-lg disabled:opacity-50"
+            className="w-full py-4 mt-2 bg-green-400 text-black font-bold uppercase text-sm tracking-widest cursor-pointer hover:bg-green-500 transition-colors rounded-lg disabled:opacity-50"
           >
             {loading ? 'Vérification...' : 'Se connecter'}
           </button>
@@ -172,12 +172,12 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
       <div className="mt-8 pt-6 border-t border-white/20 space-y-4">
         <p className="text-center text-sm text-white/70">
           Pas encore inscrit ?{' '}
-          <button onClick={() => onNavigate && onNavigate('register')} className="text-green-400 hover:text-green-300 font-bold transition">
+          <button onClick={() => onNavigate && onNavigate('register')} className="cursor-pointer text-green-400 hover:text-green-300 font-bold transition">
             Créer un compte
           </button>
         </p>
         <div className="text-center">
-          <button onClick={() => onNavigate && onNavigate('forgot-password')} className="text-white/50 hover:text-white text-sm transition">
+          <button onClick={() => onNavigate && onNavigate('forgot-password')} className="cursor-pointer text-white/50 hover:text-white text-sm transition">
             Mot de passe oublié ?
           </button>
         </div>

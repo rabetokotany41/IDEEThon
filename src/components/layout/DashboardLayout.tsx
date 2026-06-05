@@ -1,57 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { 
-  Menu, X, LogOut, Home, Sprout, ShoppingCart, Truck, Users, 
+import {
+  Menu, LogOut, Home, Sprout, ShoppingCart, Truck, Users,
   Settings, BarChart, Map, ShieldCheck, Box, Search,
-  Leaf, Wrench, Wallet, AlertTriangle
+  Leaf, Wrench, Wallet, AlertTriangle, Bell,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Agricol1 from '../../assets/images/agricol1.jpeg';
+import InteractiveBackground from '../common/InteractiveBackground';
+
+interface User { role: string; displayName?: string; phone?: string; }
+interface RoleConfigItem { label: string; accent: string; accentText: string; accentBg: string; accentBorder: string; }
+type RoleConfigMap = Record<string, RoleConfigItem>;
+
+const roleConfig: RoleConfigMap = {
+  agriculteur: { label: 'Agriculteur', accent: '#4ade80', accentText: 'text-emerald-400', accentBg: 'bg-emerald-400/15', accentBorder: 'border-emerald-400/25' },
+  acheteur: { label: 'Acheteur', accent: '#60a5fa', accentText: 'text-blue-400', accentBg: 'bg-blue-400/15', accentBorder: 'border-blue-400/25' },
+  transporteur: { label: 'Transporteur', accent: '#fb923c', accentText: 'text-orange-400', accentBg: 'bg-orange-400/15', accentBorder: 'border-orange-400/25' },
+  agent: { label: 'Agent', accent: '#22d3ee', accentText: 'text-cyan-400', accentBg: 'bg-cyan-400/15', accentBorder: 'border-cyan-400/25' },
+  admin: { label: 'Admin', accent: '#a78bfa', accentText: 'text-violet-400', accentBg: 'bg-violet-400/15', accentBorder: 'border-violet-400/25' },
+  superadmin: { label: 'Super Admin', accent: '#a78bfa', accentText: 'text-violet-400', accentBg: 'bg-violet-400/15', accentBorder: 'border-violet-400/25' },
+};
 
 const getNavLinks = (role: string) => {
-  switch (role?.toLowerCase()) {
+  const normalizedRole = role?.toLowerCase() || '';
+  switch (normalizedRole) {
     case 'agriculteur':
       return [
-        { title: 'Vue d\'ensemble', path: '/agriculteur/dashboard', icon: <Home size={20} /> },
-        { title: 'Mes Produits', path: '/agriculteur/produits', icon: <Sprout size={20} /> },
-        { title: 'Mes Ventes', path: '/agriculteur/ventes', icon: <ShoppingCart size={20} /> },
-        { title: 'IA Diagnostics', path: '/agriculteur/sante', icon: <Leaf size={20} /> },
-        { title: 'Location Matériel', path: '/agriculteur/location', icon: <Wrench size={20} /> },
-        { title: 'Microcrédit', path: '/agriculteur/finance', icon: <Wallet size={20} /> },
+        { title: "Vue d'ensemble", path: '/agriculteur/dashboard', icon: Home },
+        { title: 'Mes Produits', path: '/agriculteur/produits', icon: Sprout },
+        { title: 'Mes Ventes', path: '/agriculteur/ventes', icon: ShoppingCart },
+        { title: 'IA Diagnostics', path: '/agriculteur/sante', icon: Leaf },
+        { title: 'Location Matériel', path: '/agriculteur/location', icon: Wrench },
+        { title: 'Microcrédit', path: '/agriculteur/finance', icon: Wallet },
       ];
     case 'acheteur':
       return [
-        { title: 'Vue d\'ensemble', path: '/acheteur/dashboard', icon: <Home size={20} /> },
-        { title: 'Recherche', path: '/acheteur/recherche', icon: <Search size={20} /> },
-        { title: 'Mes Commandes', path: '/acheteur/commandes', icon: <Box size={20} /> },
+        { title: "Vue d'ensemble", path: '/acheteur/dashboard', icon: Home },
+        { title: 'Recherche', path: '/acheteur/recherche', icon: Search },
+        { title: 'Mes Commandes', path: '/acheteur/commandes', icon: Box },
       ];
     case 'transporteur':
       return [
-        { title: 'Vue d\'ensemble', path: '/transporteur/dashboard', icon: <Home size={20} /> },
-        { title: 'Missions', path: '/transporteur/missions', icon: <Map size={20} /> },
-        { title: 'Mes Trajets', path: '/transporteur/trajets', icon: <Truck size={20} /> },
-        { title: 'État des Routes', path: '/transporteur/routes', icon: <AlertTriangle size={20} /> },
+        { title: "Vue d'ensemble", path: '/transporteur/dashboard', icon: Home },
+        { title: 'Missions', path: '/transporteur/missions', icon: Map },
+        { title: 'Mes Trajets', path: '/transporteur/trajets', icon: Truck },
+        { title: "État des Routes", path: '/transporteur/routes', icon: AlertTriangle },
       ];
     case 'agent':
       return [
-        { title: 'Vue d\'ensemble', path: '/agent/dashboard', icon: <Home size={20} /> },
-        { title: 'Agriculteurs', path: '/agent/agriculteurs', icon: <Users size={20} /> },
-        { title: 'Contrôle Qualité', path: '/agent/qualite', icon: <ShieldCheck size={20} /> },
+        { title: "Vue d'ensemble", path: '/agent/dashboard', icon: Home },
+        { title: 'Agriculteurs', path: '/agent/agriculteurs', icon: Users },
+        { title: 'Contrôle Qualité', path: '/agent/qualite', icon: ShieldCheck },
       ];
     case 'admin':
+    case 'superadmin':
       return [
-        { title: 'Vue d\'ensemble', path: '/admin/dashboard', icon: <Home size={20} /> },
-        { title: 'Utilisateurs', path: '/admin/utilisateurs', icon: <Users size={20} /> },
-        { title: 'Statistiques', path: '/admin/statistiques', icon: <BarChart size={20} /> },
-        { title: 'Microcrédits', path: '/admin/finance', icon: <Wallet size={20} /> },
+        { title: "Vue d'ensemble", path: '/admin/dashboard', icon: Home },
+        { title: 'Utilisateurs', path: '/admin/utilisateurs', icon: Users },
+        { title: 'Statistiques', path: '/admin/statistiques', icon: BarChart },
+        { title: 'Microcrédits', path: '/admin/finance', icon: Wallet },
       ];
     default:
       return [];
   }
 };
-
-import InteractiveBackground from '../common/InteractiveBackground';
 
 const DashboardLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -59,130 +73,256 @@ const DashboardLayout: React.FC = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Sécurité: Si pas d'utilisateur, rediriger vers l'accueil
-  if (!user) {
-    navigate('/');
-    return null;
-  }
+  useEffect(() => {
+    if (!user) navigate('/');
+  }, [user, navigate]);
+
+  if (!user) return null;
 
   const links = getNavLinks(user.role);
+  const config = roleConfig[user.role] ?? roleConfig.admin;
+  const displayName = user.displayName || user.phone || 'Utilisateur';
+  const initials = displayName.slice(0, 2).toUpperCase();
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
-  return (
-    <div className="min-h-screen bg-[#0a0a12] text-white flex overflow-hidden font-sans relative">
-      {/* Image de fond identique à l'accueil */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <img
-          src={Agricol1}
-          className="w-full h-full object-cover opacity-40 mix-blend-screen"
-          alt="Background"
-        />
-        <div className="absolute inset-0 bg-black/60" />
-      </div>
+  const handleLinkClick = () => {
+    if (window.innerWidth < 768) setSidebarOpen(false);
+  };
 
+  return (
+    <div className="min-h-screen flex font-sans relative" style={{ background: '#0b0c14' }}>
+      {/* Arrière-plan fixe */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <img src={Agricol1} className="w-full h-full object-cover opacity-25" style={{ filter: 'blur(2px)' }} alt="Background" />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg,rgba(11,12,20,0.92) 0%,rgba(11,12,20,0.80) 100%)' }} />
+      </div>
       <InteractiveBackground />
-      <div className="absolute inset-0 bg-black/50 pointer-events-none z-0" />
-      
-      {/* OVERLAY MOBILE */}
+
+      {/* Overlay mobile */}
       <AnimatePresence>
         {sidebarOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm"
+            className="fixed inset-0 bg-black/70 z-40 md:hidden backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
           />
         )}
       </AnimatePresence>
 
-      {/* SIDEBAR */}
+      {/* ========== SIDEBAR (mobile & desktop réduit) ========== */}
       <motion.aside
-        className={`fixed md:static inset-y-0 left-0 w-64 bg-white/5 backdrop-blur-md border-r border-white/10 z-50 flex flex-col transition-transform duration-300 md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+              className={`
+          fixed
+          top-1/3
+          left-4
+          z-50
+          flex flex-col
+          w-64 md:w-20
+          transition-transform duration-300
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+          rounded-3xl
+          bg-black/40
+          backdrop-blur-xl
+          border border-white/10
+          shadow-[0_8px_32px_rgba(0,0,0,0.35)]
+          overflow-hidden
+        `}
+        style={{
+          background: "rgba(255,255,255,0.04)",
+          backdropFilter: "blur(24px)",
+        }}
       >
-        {/* LOGO */}
-        <div className="h-20 flex items-center justify-between px-6 border-b border-white/10">
-          <Link to="/" className="text-xl font-serif font-bold text-white flex items-center gap-2">
-            <Sprout className="text-green-400" />
-            AgriConnect
+        {/* Logo */}
+        <div className="h-[72px] flex items-center justify-center border-b border-white/10">
+          <Link to="/" onClick={handleLinkClick}>
+            <div
+              className={`w-11 h-11 rounded-2xl flex items-center justify-center ${config.accentBg}`}
+            >
+              <Sprout size={22} style={{ color: config.accent }} />
+            </div>
           </Link>
-          <button className="md:hidden text-white/70 hover:text-white" onClick={() => setSidebarOpen(false)}>
-            <X size={24} />
+        </div>
+
+        {/* Avatar */}
+        <div className="flex flex-col items-center py-6 gap-2">
+          <div
+            className={`
+        w-12 h-12
+        rounded-2xl
+        flex items-center justify-center
+        font-bold text-sm
+        border border-white/20
+        shadow-lg
+        ${config.accentBg}
+        ${config.accentText}
+      `}
+          >
+            {initials}
+          </div>
+
+          <span className="hidden md:block text-[11px] text-white/60 text-center">
+            {config.label}
+          </span>
+        </div>
+
+        {/* Menu principal */}
+        <div className="flex-1 flex flex-col items-center gap-3 py-4">
+          {/* Tes liens ici */}
+        </div>
+
+        {/* Notifications / Paramètres */}
+        <div className="flex flex-col items-center gap-3 py-4 border-t border-white/10">
+          <button className="relative w-10 h-10 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300">
+            <Bell size={18} className="text-white/60" />
+            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
+          </button>
+
+          <button className="w-10 h-10 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300">
+            <Settings size={18} className="text-white/60" />
           </button>
         </div>
 
-        {/* PROFIL SHORTCUT */}
-        <div className="p-6 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-green-400/20 text-green-400 flex items-center justify-center font-bold text-lg border border-green-400/30">
-              {user.displayName?.charAt(0) || user.role.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <p className="text-sm font-bold text-white truncate max-w-[140px]">{user.displayName || user.phone}</p>
-              <p className="text-xs text-green-400 capitalize">{user.role}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* NAV LINKS */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-2">
-          {links.map((link) => {
-            const isActive = location.pathname === link.path;
-            return (
-              <Link
-                key={link.path}
-                to={link.path}
-                onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                  isActive 
-                  ? 'bg-green-400/20 text-green-400 border border-green-400/30 font-semibold shadow-[0_0_15px_rgba(74,222,128,0.1)]' 
-                  : 'text-white/70 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                {link.icon}
-                <span className="text-sm">{link.title}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* LOGOUT */}
-        <div className="p-4 border-t border-white/10">
-          <button 
+        {/* Déconnexion */}
+        <div className="p-4 flex justify-center border-t border-white/10">
+          <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full text-red-400 hover:bg-red-400/10 rounded-xl transition-all"
+            className="
+        w-12 h-12
+        rounded-2xl
+        flex items-center justify-center
+        text-white/40
+        hover:text-red-400
+        hover:bg-red-500/10
+        transition-all duration-300
+      "
           >
-            <LogOut size={20} />
-            <span className="text-sm font-semibold">Déconnexion</span>
+            <LogOut size={22} />
           </button>
         </div>
       </motion.aside>
 
-      {/* MAIN CONTENT */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        
-        {/* TOPBAR */}
-        <header className="h-20 bg-white/5 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-6 z-30">
-          <div className="flex items-center gap-4">
-            <button className="md:hidden text-white/70 hover:text-white" onClick={() => setSidebarOpen(true)}>
-              <Menu size={24} />
-            </button>
-            <h1 className="text-xl font-bold capitalize text-white/90">Espace {user.role}</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <button className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition border border-white/10 text-white/70 hover:text-white">
-              <Settings size={20} />
+      {/* ========== MAIN ========== */}
+      <div className="flex-1 flex flex-col min-h-screen overflow-hidden relative z-10">
+        {/* HEADER */}
+        <header
+          className="
+            fixed
+            left-1/2
+            -translate-x-1/2
+            w-[95%]
+            max-w-7xl
+            h-[72px]
+            px-4 md:px-8
+            flex items-center justify-between
+            rounded-2xl
+            z-50
+          "
+        >
+          {/* Menu mobile */}
+          <button
+            className="md:hidden w-10 h-10 rounded-xl flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all duration-300"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu size={20} />
+          </button>
+
+          {/* Espace vide desktop */}
+          <div className="hidden md:block w-10" />
+
+          {/* Navigation Desktop */}
+          <nav className="hidden md:flex items-center gap-2 px-4 py-1 rounded-full border border-green-500/30 bg-black/40 backdrop-blur-xl">
+            {links.map((link) => {
+              const Icon = link.icon;
+              const isActive = location.pathname === link.path;
+
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`
+            flex items-center gap-2 px-4 py-2 rounded-full
+            transition-all duration-300
+            ${isActive
+                      ? "bg-green-500/20 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]"
+                      : "text-white/70 hover:text-green-400 hover:bg-green-500/10"
+                    }
+          `}
+                  style={
+                    isActive
+                      ? { border: "1px solid rgba(34,197,94,0.4)" }
+                      : {}
+                  }
+                >
+                  <Icon size={18} />
+                  <span className="text-sm font-medium">
+                    {link.title}
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Profil utilisateur */}
+          <div className="flex items-center gap-2 md:gap-3">
+            <button
+              className="
+        hidden md:flex
+        items-center gap-3
+        px-3 h-11
+        rounded-2xl
+        bg-white/5
+        border border-white/10
+        backdrop-blur-xl
+        hover:bg-white/10
+        hover:border-green-400/30
+        hover:-translate-y-0.5
+        transition-all duration-300
+        group
+      "
+            >
+              <div className="hidden lg:block text-right">
+                <p className="text-white text-sm font-semibold group-hover:text-green-300 transition-colors">
+                  {displayName}
+                </p>
+                <p className="text-white/40 text-xs">
+                  {config.label}
+                </p>
+              </div>
+
+              <div
+                className="
+          relative
+          w-9 h-9
+          rounded-full
+          flex items-center justify-center
+          font-bold text-xs
+          bg-green-500/20
+          text-green-400
+          border border-white/40
+          shadow-lg
+          group-hover:scale-110
+          transition-all duration-300
+        "
+              >
+                <span className="absolute inset-0 rounded-full bg-green-400/20 blur-md animate-pulse"></span>
+
+                <span className="relative z-10">
+                  {initials}
+                </span>
+              </div>
             </button>
           </div>
         </header>
 
-        {/* PAGE CONTENT */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8">
-          <div className="max-w-7xl mx-auto h-full">
+        {/* Contenu principal */}
+        <main className="flex-1 overflow-y-auto p-5 md:p-7 mb-4 mt-[72px]">
+          <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>
         </main>

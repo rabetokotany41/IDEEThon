@@ -172,21 +172,21 @@ const Home: React.FC = () => {
         </div>
 
         <nav className="hidden md:flex gap-10 text-sm uppercase items-center">
-          <button onClick={() => handleNavClick("home")} className={`transition ${activePage === "home" ? "text-green-300 font-bold" : "hover:text-green-300"}`}>
+          <button onClick={() => handleNavClick("home")} className={`transition ${activePage === "home" ? "cursor-pointer text-green-300 font-bold" : "hover:text-green-300"}`}>
             {t[lang].home}
           </button>
-          <button onClick={() => handleNavClick("agricol")} className={`transition ${activePage === "agricol" ? "text-green-300 font-bold" : "text-white/60 hover:text-green-300"}`}>
+          <button onClick={() => handleNavClick("agricol")} className={`transition ${activePage === "agricol" ? "cursor-pointer text-green-300 font-bold" : "text-white/60 hover:text-green-300"}`}>
             {t[lang].marketplace}
           </button>
-          <button onClick={() => handleNavClick("contact")} className={`transition ${activePage === "contact" ? "text-green-300 font-bold" : "text-white/60 hover:text-green-300"}`}>
+          <button onClick={() => handleNavClick("contact")} className={`transition ${activePage === "contact" ? "cursor-pointer text-green-300 font-bold" : "text-white/60 hover:text-green-300"}`}>
             {t[lang].contact}
           </button>
-          <button onClick={() => handleNavClick("login")} className="px-5 py-2 rounded-full border border-green-400 text-green-400 hover:bg-green-400 hover:text-black font-bold transition">
+          <button onClick={() => handleNavClick("login")} className="px-5 cursor-pointer py-2 rounded-full border border-green-400 text-green-400 hover:bg-green-400 hover:text-black font-bold transition">
             {t[lang].connect}
           </button>
         </nav>
 
-        <div ref={menuRef} className="relative md:hidden z-40">
+        <div ref={menuRef} className="relative cursor-pointer md:hidden z-40">
           <button onClick={() => setMenuOpen(!menuOpen)}>
             <FiMenu size={24} />
           </button>
@@ -200,16 +200,16 @@ const Home: React.FC = () => {
                 style={{ backgroundColor: colors.primaryDark }}
               >
                 <ul className="flex flex-col gap-4 text-sm">
-                  <li><button onClick={() => handleNavClick("home")} className="hover:text-green-300 transition block text-left w-full">{t[lang].home}</button></li>
-                  <li><button onClick={() => handleNavClick("agricol")} className="hover:text-green-300 transition block text-left w-full">{t[lang].marketplace}</button></li>
-                  <li><button onClick={() => handleNavClick("contact")} className="hover:text-green-300 transition block text-left w-full">{t[lang].contact}</button></li>
+                  <li><button onClick={() => handleNavClick("home")} className="cursor-pointer hover:text-green-300 transition block text-left w-full">{t[lang].home}</button></li>
+                  <li><button onClick={() => handleNavClick("agricol")} className="cursor-pointer hover:text-green-300 transition block text-left w-full">{t[lang].marketplace}</button></li>
+                  <li><button onClick={() => handleNavClick("contact")} className="cursor-pointer hover:text-green-300 transition block text-left w-full">{t[lang].contact}</button></li>
                   <div className="w-full h-px bg-white/20 my-1"></div>
-                  <li><button onClick={() => handleNavClick("login")} className="hover:text-green-300 transition block text-left w-full">{t[lang].connect}</button></li>
-                  <li><button onClick={() => handleNavClick("register")} className="text-green-400 font-bold hover:text-green-300 transition block text-left w-full">{t[lang].register}</button></li>
-                  <li><button onClick={() => handleNavClick("forgot-password")} className="hover:text-green-300 transition block text-left w-full opacity-70">{t[lang].forgot}</button></li>
+                  <li><button onClick={() => handleNavClick("login")} className="cursor-pointer hover:text-green-300 transition block text-left w-full">{t[lang].connect}</button></li>
+                  <li><button onClick={() => handleNavClick("register")} className="cursor-pointer text-green-400 font-bold hover:text-green-300 transition block text-left w-full">{t[lang].register}</button></li>
+                  <li><button onClick={() => handleNavClick("forgot-password")} className="cursor-pointer hover:text-green-300 transition block text-left w-full opacity-70">{t[lang].forgot}</button></li>
                   <div className="flex gap-4 pt-2">
-                    <button onClick={() => setLang("en")} className={`text-xs ${lang === "en" ? "text-green-300" : "opacity-60"}`}>EN</button>
-                    <button onClick={() => setLang("fr")} className={`text-xs ${lang === "fr" ? "text-green-300" : "opacity-60"}`}>FR</button>
+                    <button onClick={() => setLang("en")} className={`text-xs ${lang === "en" ? "cursor-pointer text-green-300" : "opacity-60"}`}>EN</button>
+                    <button onClick={() => setLang("fr")} className={`text-xs ${lang === "fr" ? "cursor-pointer text-green-300" : "opacity-60"}`}>FR</button>
                   </div>
                 </ul>
               </motion.div>
@@ -220,12 +220,12 @@ const Home: React.FC = () => {
 
       {/* SOCIAL + LANGUE (z-index 20) */}
       <div className="absolute right-6 top-1/2 -translate-y-1/2 z-20 hidden md:flex flex-col items-center gap-6 bg-black/40 backdrop-blur-sm rounded-full py-6 px-3 border border-white/20">
-        <a href="#" className="hover:text-green-300 transition"><FaFacebook size={18} /></a>
-        <a href="#" className="hover:text-green-300 transition"><FaInstagram size={18} /></a>
-        <a href="#" className="hover:text-green-300 transition"><FaTwitter size={18} /></a>
+        <a href="#" className="cursor-pointer hover:text-green-300 transition"><FaFacebook size={18} /></a>
+        <a href="#" className="cursor-pointer hover:text-green-300 transition"><FaInstagram size={18} /></a>
+        <a href="#" className="cursor-pointer hover:text-green-300 transition"><FaTwitter size={18} /></a>
         <div className="w-6 h-px bg-white/30 my-2" />
-        <button onClick={() => setLang("en")} className={`text-xs font-medium ${lang === "en" ? "text-green-300" : "opacity-60 hover:opacity-100"}`}>EN</button>
-        <button onClick={() => setLang("fr")} className={`text-xs font-medium ${lang === "fr" ? "text-green-300" : "opacity-60 hover:opacity-100"}`}>FR</button>
+        <button onClick={() => setLang("en")} className={`cursor-pointer text-xs font-medium ${lang === "en" ? "text-green-300" : "opacity-60 hover:opacity-100"}`}>EN</button>
+        <button onClick={() => setLang("fr")} className={`cursor-pointer text-xs font-medium ${lang === "fr" ? "text-green-300" : "opacity-60 hover:opacity-100"}`}>FR</button>
       </div>
 
       {/* DOTS VERTICAUX (z-index 20) */}
@@ -256,7 +256,7 @@ const Home: React.FC = () => {
             <h2 className="text-7xl opacity-40 font-serif mb-4">{String(activeData.id + 1).padStart(2, "0")}</h2>
             <h1 className="text-4xl md:text-6xl font-serif mb-2 drop-shadow-lg">{activeData.title}</h1>
             <p className="text-white/80 mb-8 drop-shadow-md">{activeData.location}</p>
-            <button className="px-8 py-3 border border-white/50 uppercase text-sm hover:bg-white hover:text-black transition backdrop-blur-sm">
+            <button className="px-8 py-3 border border-white/50 cursor-pointer uppercase text-sm hover:bg-white hover:text-black transition backdrop-blur-sm">
               {t[lang].explore}
             </button>
           </motion.div>
