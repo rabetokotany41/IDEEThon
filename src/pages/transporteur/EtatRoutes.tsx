@@ -1,15 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, MapPin, Navigation, Clock, CheckCircle } from 'lucide-react';
+import api from '../../services/api';
 
 const EtatRoutes: React.FC = () => {
   const [reported, setReported] = useState(false);
+  const [alertes, setAlertes] = useState<any[]>([]);
+  
+  // Nouveaux champs pour le formulaire
+  const [type, setType] = useState('Route coupée / Inondation');
+  const [location, setLocation] = useState('');
+  const [description, setDescription] = useState('');
 
-  const alertes = [
-    { id: 1, type: 'Route coupée', lieu: 'RN7 - PK 145 (Antsirabe)', cause: 'Éboulement de terrain', temps: 'Il y a 2h', gravite: 'Critique' },
-    { id: 2, type: 'Boue intense', lieu: 'Piste rurale - Itasy', cause: 'Fortes pluies', temps: 'Il y a 5h', gravite: 'Modérée' },
-    { id: 3, type: 'Pont fragile', lieu: 'Route Ambatolampy', cause: 'Crues', temps: 'Hier', gravite: 'Haute' },
-  ];
+  const fetchAlerts = async () => {
+    try {
+      const response = await api.get('/roads');
+      const formatted = response.data.map((a: any) => ({
+        id: a.id,
+        type: a.type,
+        lieu: a.location,
+        cause: a.description || 'Non précisé',
+        temps: new Date(a.created_at).toLocaleDateString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        gravite: a.severity === 'CRITICAL' ? 'Critique' : a.severity === 'HIGH' ? 'Haute' : 'Modérée'
+      }));
+      setAlertes(formatted);
+    } catch (error) {
+      console.error('Error fetching road alerts:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
+
+  const handleSubmit = async () => {
+    if (!location) return alert("Veuillez renseigner la localisation.");
+    
+    let severity = 'MODERATE';
+    if (type.includes('coupée') || type.includes('pont')) severity = 'CRITICAL';
+
+    try {
+      await api.post('/roads', {
+        type,
+        location,
+        description,
+        severity
+      });
+      setReported(true);
+      fetchAlerts();
+      setLocation('');
+      setDescription('');
+    } catch (error) {
+      console.error('Error creating road alert:', error);
+      alert("Erreur lors de l'envoi de l'alerte.");
+    }
+  };
+
+  const handleResolve = async (id: string) => {
+    if (!window.confirm("Confirmer que la route est dégagée ?")) return;
+    try {
+      await api.patch(`/roads/${id}/resolve`);
+      fetchAlerts();
+    } catch (error) {
+      console.error('Error resolving road alert:', error);
+    }
+  };
 
   return (
     <motion.div 
@@ -36,7 +91,11 @@ const EtatRoutes: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-white/70 mb-2">Type de problème</label>
-                <select className="w-full bg-black/30 border border-white/20 p-3 rounded-lg focus:outline-none focus:border-yellow-400 transition text-sm text-white/70">
+                <select 
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className="w-full bg-black/30 border border-white/20 p-3 rounded-lg focus:outline-none focus:border-yellow-400 transition text-sm text-white/70"
+                >
                   <option className="bg-gray-800">Route coupée / Inondation</option>
                   <option className="bg-gray-800">Boue très épaisse (4x4 requis)</option>
                   <option className="bg-gray-800">Pont impraticable</option>
@@ -50,6 +109,8 @@ const EtatRoutes: React.FC = () => {
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={16} />
                   <input 
                     type="text" 
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
                     placeholder="Ex: RN7, près d'Ambohimandroso"
                     className="w-full bg-black/30 border border-white/20 py-3 pl-10 pr-4 rounded-lg focus:outline-none focus:border-yellow-400 transition text-sm text-white placeholder-white/40"
                   />
@@ -60,13 +121,15 @@ const EtatRoutes: React.FC = () => {
                 <label className="block text-sm text-white/70 mb-2">Description rapide</label>
                 <textarea 
                   rows={3}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   placeholder="Détails supplémentaires..."
                   className="w-full bg-black/30 border border-white/20 p-3 rounded-lg focus:outline-none focus:border-yellow-400 transition text-sm text-white placeholder-white/40 resize-none"
                 ></textarea>
               </div>
 
               <button 
-                onClick={() => setReported(true)}
+                onClick={handleSubmit}
                 className="w-full py-4 mt-2 bg-yellow-400 text-black font-bold uppercase text-sm tracking-widest hover:bg-yellow-500 transition-colors rounded-lg shadow-[0_0_15px_rgba(250,204,21,0.3)] flex items-center justify-center gap-2"
               >
                 <AlertTriangle size={18} /> Envoyer l'alerte
@@ -99,7 +162,9 @@ const EtatRoutes: React.FC = () => {
           </div>
           
           <div className="space-y-4">
-            {alertes.map((alerte) => (
+            {alertes.length === 0 ? (
+              <div className="text-center text-white/50 py-10">Aucune alerte routière.</div>
+            ) : alertes.map((alerte) => (
               <div key={alerte.id} className="bg-black/30 rounded-xl border border-white/10 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 group hover:border-yellow-400/30 transition">
                 <div className="flex items-start gap-4">
                   <div className={`p-3 rounded-xl mt-1 ${
@@ -132,7 +197,10 @@ const EtatRoutes: React.FC = () => {
                   <span className="text-xs text-white/40 flex items-center gap-1">
                     <Clock size={12} /> {alerte.temps}
                   </span>
-                  <button className="ml-auto md:ml-0 text-xs font-bold text-green-400 bg-green-400/10 hover:bg-green-400 hover:text-black px-3 py-1.5 rounded transition">
+                  <button 
+                    onClick={() => handleResolve(alerte.id)}
+                    className="ml-auto md:ml-0 text-xs font-bold text-green-400 bg-green-400/10 hover:bg-green-400 hover:text-black px-3 py-1.5 rounded transition"
+                  >
                     Route dégagée ?
                   </button>
                 </div>

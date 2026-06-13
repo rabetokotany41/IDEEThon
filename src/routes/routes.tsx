@@ -1,6 +1,8 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
 import DashboardLayout from '../components/layout/DashboardLayout';
+import NotificationsPage from '../components/common/Notification';   // Nouveau
+import SettingsPage from '../components/common/Settings';             // Nouveau
 
 // Pages Publiques
 import Accueil from '../pages/public/Home';
@@ -38,6 +40,7 @@ import AdminStatistiques from '../pages/admin/Statistiques';
 import AdminFinance from '../pages/admin/FinanceAdmin';
 
 export const router = createBrowserRouter([
+  // Routes publiques (avec MainLayout)
   {
     path: '/',
     element: <MainLayout />,
@@ -47,11 +50,16 @@ export const router = createBrowserRouter([
       { path: '/meteo', element: <Meteo /> },
     ],
   },
+  // Routes protégées (avec DashboardLayout)
   {
     path: '/',
     element: <DashboardLayout />,
     children: [
-      // Agriculteur
+      // === Routes transverses (accessibles à tous les rôles connectés) ===
+      { path: '/notifications', element: <NotificationsPage /> },
+      { path: '/settings', element: <SettingsPage /> },
+
+      // === Agriculteur ===
       { path: '/agriculteur', element: <Navigate to="/agriculteur/dashboard" replace /> },
       { path: '/agriculteur/dashboard', element: <AgriculteurDashboard /> },
       { path: '/agriculteur/produits', element: <AgriculteurProduits /> },
@@ -60,26 +68,26 @@ export const router = createBrowserRouter([
       { path: '/agriculteur/location', element: <AgriculteurLocation /> },
       { path: '/agriculteur/finance', element: <AgriculteurFinance /> },
 
-      // Acheteur
+      // === Acheteur ===
       { path: '/acheteur', element: <Navigate to="/acheteur/dashboard" replace /> },
       { path: '/acheteur/dashboard', element: <AcheteurDashboard /> },
       { path: '/acheteur/recherche', element: <AcheteurRecherche /> },
       { path: '/acheteur/commandes', element: <AcheteurCommandes /> },
 
-      // Transporteur
+      // === Transporteur ===
       { path: '/transporteur', element: <Navigate to="/transporteur/dashboard" replace /> },
       { path: '/transporteur/dashboard', element: <TransporteurDashboard /> },
       { path: '/transporteur/missions', element: <TransporteurMissions /> },
       { path: '/transporteur/trajets', element: <TransporteurTrajets /> },
       { path: '/transporteur/routes', element: <TransporteurRoutes /> },
 
-      // Agent
+      // === Agent ===
       { path: '/agent', element: <Navigate to="/agent/dashboard" replace /> },
       { path: '/agent/dashboard', element: <AgentDashboard /> },
       { path: '/agent/agriculteurs', element: <AgentAgriculteurs /> },
       { path: '/agent/qualite', element: <AgentQualite /> },
 
-      // Admin
+      // === Admin ===
       { path: '/admin', element: <Navigate to="/admin/dashboard" replace /> },
       { path: '/admin/dashboard', element: <AdminDashboard /> },
       { path: '/admin/utilisateurs', element: <AdminUtilisateurs /> },

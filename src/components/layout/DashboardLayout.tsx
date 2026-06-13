@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import Logo from '../../assets/icons/logo.png';
 import {
   Menu, LogOut, Home, Sprout, ShoppingCart, Truck, Users,
   Settings, BarChart, Map, ShieldCheck, Box, Search,
@@ -117,21 +118,7 @@ const DashboardLayout: React.FC = () => {
 
       {/* ========== SIDEBAR (mobile & desktop réduit) ========== */}
       <motion.aside
-              className={`
-          fixed
-          top-1/3
-          left-4
-          z-50
-          flex flex-col
-          w-64 md:w-20
-          transition-transform duration-300
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-          rounded-3xl
-          bg-black/40
-          backdrop-blur-xl
-          border border-white/10
-          shadow-[0_8px_32px_rgba(0,0,0,0.35)]
-          overflow-hidden
+        className={`fixed top-1/3 left-4 z-50 flex flex-col w-64 md:w-20 transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} rounded-3xl bg-black/40 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.35)] overflow-hidden
         `}
         style={{
           background: "rgba(255,255,255,0.04)",
@@ -140,11 +127,11 @@ const DashboardLayout: React.FC = () => {
       >
         {/* Logo */}
         <div className="h-[72px] flex items-center justify-center border-b border-white/10">
-          <Link to="/" onClick={handleLinkClick}>
+          <Link to="#" onClick={handleLinkClick}>
             <div
               className={`w-11 h-11 rounded-2xl flex items-center justify-center ${config.accentBg}`}
             >
-              <Sprout size={22} style={{ color: config.accent }} />
+              <img src={Logo} alt="logo" />
             </div>
           </Link>
         </div>
@@ -152,13 +139,7 @@ const DashboardLayout: React.FC = () => {
         {/* Avatar */}
         <div className="flex flex-col items-center py-6 gap-2">
           <div
-            className={`
-        w-12 h-12
-        rounded-2xl
-        flex items-center justify-center
-        font-bold text-sm
-        border border-white/20
-        shadow-lg
+            className={` w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm border border-white/20 shadow-lg
         ${config.accentBg}
         ${config.accentText}
       `}
@@ -178,29 +159,21 @@ const DashboardLayout: React.FC = () => {
 
         {/* Notifications / Paramètres */}
         <div className="flex flex-col items-center gap-3 py-4 border-t border-white/10">
-          <button className="relative w-10 h-10 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300">
+          <Link to="/notifications" className="cursor-pointer relative w-10 h-10 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300">
             <Bell size={18} className="text-white/60" />
             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
-          </button>
+          </Link>
 
-          <button className="w-10 h-10 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300">
+          <Link to="/settings" className="w-10 h-10 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300">
             <Settings size={18} className="text-white/60" />
-          </button>
+          </Link>
         </div>
 
         {/* Déconnexion */}
         <div className="p-4 flex justify-center border-t border-white/10">
           <button
             onClick={handleLogout}
-            className="
-        w-12 h-12
-        rounded-2xl
-        flex items-center justify-center
-        text-white/40
-        hover:text-red-400
-        hover:bg-red-500/10
-        transition-all duration-300
-      "
+            className="cursor-pointer w-12 h-12 rounded-2xl flex items-center justify-center text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300"
           >
             <LogOut size={22} />
           </button>
@@ -211,22 +184,12 @@ const DashboardLayout: React.FC = () => {
       <div className="flex-1 flex flex-col min-h-screen overflow-hidden relative z-10">
         {/* HEADER */}
         <header
-          className="
-            fixed
-            left-1/2
-            -translate-x-1/2
-            w-[95%]
-            max-w-7xl
-            h-[72px]
-            px-4 md:px-8
-            flex items-center justify-between
-            rounded-2xl
-            z-50
+          className=" fixed left-1/2 -translate-x-1/2 w-[95%] max-w-7xl h-[72px] px-4 md:px-8 flex items-center justify-between rounded-2xl z-50
           "
         >
           {/* Menu mobile */}
           <button
-            className="md:hidden w-10 h-10 rounded-xl flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all duration-300"
+            className="cursor-pointer md:hidden w-10 h-10 rounded-xl flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all duration-300"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu size={20} />
@@ -245,9 +208,7 @@ const DashboardLayout: React.FC = () => {
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`
-            flex items-center gap-2 px-4 py-2 rounded-full
-            transition-all duration-300
+                  className={` flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300
             ${isActive
                       ? "bg-green-500/20 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]"
                       : "text-white/70 hover:text-green-400 hover:bg-green-500/10"
@@ -271,20 +232,7 @@ const DashboardLayout: React.FC = () => {
           {/* Profil utilisateur */}
           <div className="flex items-center gap-2 md:gap-3">
             <button
-              className="
-        hidden md:flex
-        items-center gap-3
-        px-3 h-11
-        rounded-2xl
-        bg-white/5
-        border border-white/10
-        backdrop-blur-xl
-        hover:bg-white/10
-        hover:border-green-400/30
-        hover:-translate-y-0.5
-        transition-all duration-300
-        group
-      "
+              className=" hidden md:flex items-center gap-3 px-3 h-11 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl hover:bg-white/10 hover:border-green-400/30 hover:-translate-y-0.5 transition-all duration-300 group"
             >
               <div className="hidden lg:block text-right">
                 <p className="text-white text-sm font-semibold group-hover:text-green-300 transition-colors">
@@ -296,19 +244,7 @@ const DashboardLayout: React.FC = () => {
               </div>
 
               <div
-                className="
-          relative
-          w-9 h-9
-          rounded-full
-          flex items-center justify-center
-          font-bold text-xs
-          bg-green-500/20
-          text-green-400
-          border border-white/40
-          shadow-lg
-          group-hover:scale-110
-          transition-all duration-300
-        "
+                className=" relative w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs bg-green-500/20 text-green-400 border border-white/40 shadow-lg group-hover:scale-110 transition-all duration-300"
               >
                 <span className="absolute inset-0 rounded-full bg-green-400/20 blur-md animate-pulse"></span>
 

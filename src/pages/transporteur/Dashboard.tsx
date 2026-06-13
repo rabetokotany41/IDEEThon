@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Truck, MapPin, Package, Clock, CheckCircle, AlertTriangle, Navigation, Fuel, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
+import api from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 
 const glass: React.CSSProperties = {
   background: 'rgba(255,255,255,0.05)',
@@ -15,26 +17,54 @@ const card = (i: number) => ({
 const ACCENT = '#fb923c';
 
 const Dashboard: React.FC = () => {
+  const { user } = useAuth();
   const [mTab, setMTab] = useState<'actives' | 'terminees'>('actives');
 
-  const stats = [
-    { label: 'Missions ce mois',   value: '14',       unit: '',    icon: Truck,       accent: ACCENT,    trend: '+3 ce mois' },
-    { label: 'Distance parcourue', value: '2 840',     unit: 'km',  icon: Navigation,  accent: '#fbbf24', trend: 'Ce mois' },
-    { label: 'Revenus du mois',    value: '980 000',   unit: 'Ar',  icon: Package,     accent: '#facc15', trend: '+18%' },
+  const [stats, setStats] = useState([
+    { label: 'Missions ce mois',   value: '0',       unit: '',    icon: Truck,       accent: ACCENT,    trend: 'Ce mois' },
+    { label: 'Distance parcourue', value: '0',     unit: 'km',  icon: Navigation,  accent: '#fbbf24', trend: 'Ce mois' },
+    { label: 'Revenus du mois',    value: '0',   unit: 'Ar',  icon: Package,     accent: '#facc15', trend: 'Global' },
     { label: 'Note transporteur',  value: '4.6',       unit: '/5',  icon: Star,        accent: '#a3e635', trend: 'Très bien' },
-  ];
+  ]);
 
-  const missionData = {
-    actives: [
-      { id: '#MSS-082', route: 'Antsirabe → Antananarivo', cargo: 'Riz (800 kg)',    client: 'Coop. Beta', distance: '170 km', status: 'En route',   eta: '14h30' },
-      { id: '#MSS-083', route: 'Fianarantsoa → Antsirabe', cargo: 'Maïs (500 kg)',   client: 'AgroShop',   distance: '230 km', status: 'Chargement', eta: '16h00' },
-    ],
-    terminees: [
-      { id: '#MSS-079', route: 'Toamasina → Tana',         cargo: 'Litchi (300 kg)',      client: 'FruiTrop',    distance: '360 km', status: 'Livré', eta: 'Hier 11h20' },
-      { id: '#MSS-080', route: 'Mahajanga → Tana',          cargo: 'Poisson séché (200 kg)', client: 'Marché Centr.', distance: '580 km', status: 'Livré', eta: 'Avant-hier' },
-      { id: '#MSS-081', route: 'Tuléar → Fianarantsoa',    cargo: 'Haricots (450 kg)',    client: 'Export SA',   distance: '310 km', status: 'Livré', eta: 'Il y a 3j' },
-    ],
-  };
+  const [missionData, setMissionData] = useState({ actives: [] as any[], terminees: [] as any[] });
+
+  useEffect(() => {
+    const fetchTransporterData = async () => {
+      try {
+        const statsRes = await api.get('/users/transporter/stats');
+        setStats([
+          { label: 'Missions ce mois', value: statsRes.data.monthlyMissions.toString(), unit: '', icon: Truck, accent: ACCENT, trend: 'Ce mois' },
+          { label: 'Distance parcourue', value: statsRes.data.totalDistance.toString(), unit: 'km', icon: Navigation, accent: '#fbbf24', trend: 'Global' },
+          { label: 'Revenus globaux', value: statsRes.data.totalRevenue.toLocaleString('fr-MG'), unit: 'Ar', icon: Package, accent: '#facc15', trend: 'Total' },
+          { label: 'Note transporteur', value: '4.6', unit: '/5', icon: Star, accent: '#a3e635', trend: 'Très bien' },
+        ]);
+
+        if (user) {
+          const missionsRes = await api.get(`/delivery/transporter/${user.id}`);
+          const allMissions = missionsRes.data;
+          
+          const formatMission = (m: any) => ({
+            id: `#MSS-${m.id.slice(0, 6).toUpperCase()}`,
+            route: `${m.origin} → ${m.destination}`,
+            cargo: `Commande N°${m.order_id.slice(0,4)}`,
+            client: 'Livraison standard',
+            distance: `${m.distance || 0} km`,
+            status: m.status === 'DELIVERED' ? 'Livré' : 'En route',
+            eta: new Date(m.created_at).toLocaleDateString('fr-FR'),
+          });
+
+          setMissionData({
+            actives: allMissions.filter((m: any) => m.status !== 'DELIVERED' && m.status !== 'CANCELLED').map(formatMission),
+            terminees: allMissions.filter((m: any) => m.status === 'DELIVERED').map(formatMission),
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching transporter dashboard data:', error);
+      }
+    };
+    fetchTransporterData();
+  }, [user]);
 
   const alerts = [
     { msg: 'RN2 — Travaux entre km 84-92',              type: 'warning' },
@@ -56,9 +86,8 @@ const Dashboard: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <p className="text-white/35 text-xs font-medium uppercase tracking-widest mb-1">Jeudi, 5 Juin 2026</p>
-          <h2 className="text-white font-bold text-2xl">Bonjour, Solofo 🚛</h2>
-          <p className="text-white/40 text-sm mt-1">2 missions actives aujourd'hui.</p>
+          <h2 className="text-white font-bold text-2xl">Bonjour, {user?.fullName || 'Transporteur'} 🚛</h2>
+          <p className="text-white/40 text-sm mt-1">{missionData.actives.length} missions actives aujourd'hui.</p>
         </div>
         <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
           className="flex items-center gap-2 px-5 py-3 rounded-2xl font-semibold text-sm text-white"

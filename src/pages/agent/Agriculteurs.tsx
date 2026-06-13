@@ -1,13 +1,35 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, XCircle, Search, MapPin } from 'lucide-react';
+import api from '../../services/api';
 
 const Agriculteurs: React.FC = () => {
-  const agriculteurs = [
-    { id: 1, nom: 'Jean Rakoto', lieu: 'Itasy', ferme: 'Ferme Valisoa', statut: 'Vérifié', date_inscription: '12 Sep 2023' },
-    { id: 2, nom: 'Marie Rasoa', lieu: 'Vakinankaratra', ferme: 'Coopérative Beta', statut: 'En attente', date_inscription: '10 Oct 2023' },
-    { id: 3, nom: 'Andry', lieu: 'Analamanga', ferme: 'Les Rizières', statut: 'Rejeté', date_inscription: '05 Oct 2023' },
-  ];
+  const [agriculteurs, setAgriculteurs] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const fetchFarmers = async () => {
+      try {
+        const response = await api.get('/users');
+        const farmers = response.data
+          .filter((u: any) => u.role === 'AGRICULTEUR')
+          .map((u: any) => ({
+            id: u.id,
+            nom: u.full_name || u.phone,
+            lieu: u.village || u.region || 'Non défini',
+            ferme: `Ferme de ${u.full_name || 'l\'agriculteur'}`,
+            statut: 'Vérifié', // TODO: Ajouter un vrai statut de validation si nécessaire
+            date_inscription: new Date(u.created_at).toLocaleDateString('fr-FR'),
+          }));
+        setAgriculteurs(farmers);
+      } catch (error) {
+        console.error('Error fetching farmers:', error);
+      }
+    };
+    fetchFarmers();
+  }, []);
+
+  const filtered = agriculteurs.filter(a => a.nom.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <motion.div 
@@ -26,6 +48,8 @@ const Agriculteurs: React.FC = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={18} />
           <input 
             type="text" 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Rechercher..." 
             className="w-full bg-black/30 border border-white/20 rounded-lg py-2 pl-10 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-green-400 transition"
           />
@@ -45,7 +69,7 @@ const Agriculteurs: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {agriculteurs.map((agri) => (
+              {filtered.map((agri) => (
                 <tr key={agri.id} className="border-b border-white/5 hover:bg-white/5 transition">
                   <td className="p-4">
                     <p className="font-bold text-white">{agri.nom}</p>

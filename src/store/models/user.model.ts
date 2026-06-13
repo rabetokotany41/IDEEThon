@@ -1,4 +1,4 @@
-export type UserRole = 'agriculteur' | 'acheteur' | 'transporteur' | 'agent' | 'admin' | 'superadmin';
+export type UserRole = 'agriculteur' | 'acheteur' | 'transporteur' | 'agent' | 'admin';
 
 export interface User {
   id: string;                     // UID Firestore ou UUID

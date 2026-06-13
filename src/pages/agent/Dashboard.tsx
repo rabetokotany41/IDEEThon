@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, ShieldCheck, ClipboardList, TrendingUp, ArrowUpRight, CheckCircle, Clock, AlertTriangle, MapPin, Star, XCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import api from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 
 const glass: React.CSSProperties = {
   background: 'rgba(255,255,255,0.05)',
@@ -14,14 +16,31 @@ const card = (i: number) => ({
 const ACCENT = '#22d3ee';
 
 const Dashboard: React.FC = () => {
+  const { user } = useAuth();
   const [tab, setTab] = useState<'pending' | 'done'>('pending');
-
-  const stats = [
-    { label: 'Agriculteurs suivis',       value: '38',  unit: '',  icon: Users,        accent: ACCENT,    trend: '+4 ce mois' },
-    { label: 'Contrôles qualité',          value: '21',  unit: '',  icon: ShieldCheck,  accent: '#2dd4bf', trend: 'Ce mois' },
-    { label: 'Validations en attente',     value: '5',   unit: '',  icon: ClipboardList,accent: '#f87171', trend: '⚠ Urgent' },
+  const [stats, setStats] = useState([
+    { label: 'Agriculteurs suivis',       value: '0',  unit: '',  icon: Users,        accent: ACCENT,    trend: 'Ce mois' },
+    { label: 'Contrôles qualité',          value: '0',  unit: '',  icon: ShieldCheck,  accent: '#2dd4bf', trend: 'Ce mois' },
+    { label: 'Alertes en attente',     value: '0',   unit: '',  icon: ClipboardList,accent: '#f87171', trend: '⚠ Urgent' },
     { label: 'Score de terrain',           value: '94',  unit: '%', icon: TrendingUp,   accent: '#4ade80', trend: 'Excellent' },
-  ];
+  ]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await api.get('/users/agent/stats');
+        setStats([
+          { label: 'Agriculteurs inscrits',       value: response.data.totalFarmers.toString(),  unit: '',  icon: Users,        accent: ACCENT,    trend: 'Global' },
+          { label: 'Contrôles qualité',          value: response.data.qualityChecksDone.toString(),  unit: '',  icon: ShieldCheck,  accent: '#2dd4bf', trend: 'Global' },
+          { label: 'Alertes routières',     value: response.data.pendingRoadAlerts.toString(),   unit: '',  icon: AlertTriangle,accent: '#f87171', trend: 'Non résolues' },
+          { label: 'Score de terrain',           value: '94',  unit: '%', icon: TrendingUp,   accent: '#4ade80', trend: 'Excellent' },
+        ]);
+      } catch (error) {
+        console.error('Error fetching agent stats:', error);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const validations = {
     pending: [
@@ -57,9 +76,9 @@ const Dashboard: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <p className="text-white/35 text-xs font-medium uppercase tracking-widest mb-1">Jeudi, 5 Juin 2026</p>
-          <h2 className="text-white font-bold text-2xl">Bonjour, Agent Razafy 🛡️</h2>
-          <p className="text-white/40 text-sm mt-1">5 validations en attente de traitement.</p>
+          <p className="text-white/35 text-xs font-medium uppercase tracking-widest mb-1">{new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
+          <h2 className="text-white font-bold text-2xl">Bonjour, {user?.fullName || 'Agent'} 🛡️</h2>
+          <p className="text-white/40 text-sm mt-1">{stats[2].value} alertes nécessitent votre attention.</p>
         </div>
         <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
           className="flex items-center gap-2 px-5 py-3 rounded-2xl font-semibold text-sm text-black"

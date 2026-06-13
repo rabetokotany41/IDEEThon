@@ -1,8 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart, PieChart, Activity, TrendingUp } from 'lucide-react';
+import api from '../../services/api';
 
 const Statistiques: React.FC = () => {
+  const [totalUsers, setTotalUsers] = useState(1452);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await api.get('/users/admin/stats');
+        setTotalUsers(response.data.totalUsers);
+      } catch (error) {
+        console.error('Error fetching admin stats:', error);
+      }
+    };
+    fetchStats();
+  }, []);
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -47,7 +62,7 @@ const Statistiques: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-tr from-green-400 to-green-600 opacity-80" style={{ clipPath: 'polygon(50% 50%, 100% 0, 100% 100%, 0 100%, 0 0, 50% 0)' }}></div>
               <div className="absolute inset-0 bg-gradient-to-tr from-blue-400 to-blue-600 opacity-80" style={{ clipPath: 'polygon(50% 50%, 0 0, 50% 0)' }}></div>
               <div className="w-32 h-32 bg-[#0a0a12] rounded-full z-10 flex flex-col items-center justify-center">
-                <span className="text-2xl font-bold text-white">1,452</span>
+                <span className="text-2xl font-bold text-white">{totalUsers}</span>
                 <span className="text-xs text-white/50">Total</span>
               </div>
             </div>

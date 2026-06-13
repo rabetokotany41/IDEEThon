@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../../hooks/useAuth';
+import { VirtualNotification } from '../../common/VirtualNotification';
 
 interface LoginProps {
   onNavigate?: (page: string) => void;
@@ -12,10 +13,17 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
   const { login } = useAuth();
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [step, setStep] = useState<'phone' | 'otp' | 'password'>('phone');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' as 'success' | 'error' });
+  const [debugOtp, setDebugOtp] = useState('');
   const navigate = useNavigate();
+
+  const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => setNotification({ show: false, message: '', type: 'success' }), 5000);
+  };
 
   const requestOtp = async () => {
     if (!phone || phone.length < 9) {
@@ -26,14 +34,39 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
     setLoading(true);
     setError('');
 
-    setTimeout(() => {
+    try {
+      const response = await fetch('http://localhost:3000/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, purpose: 'login' }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setError(data.message || 'Erreur lors de l\'envoi du code');
+        setLoading(false);
+        return;
+      }
+
+      // Afficher le code OTP en mode développement
+      if (data.debugOtp) {
+        setDebugOtp(data.debugOtp);
+        showNotification(`📩 Code envoyé: ${data.debugOtp}`, 'success');
+      } else {
+        showNotification('📩 Code envoyé dans l\'application', 'success');
+      }
+
       setStep('otp');
+    } catch (err) {
+      setError('Impossible de se connecter au serveur');
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const verifyOtp = async () => {
-    if (!otp || otp.length < 4) {
+    if (!otp || otp.length < 6) {
       setError('Code à 6 chiffres requis');
       return;
     }
@@ -42,10 +75,38 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
     setError('');
 
     try {
+      const response = await fetch('http://localhost:3000/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, otp }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setError(data.message || 'Code incorrect');
+        setLoading(false);
+        return;
+      }
+
+      showNotification('✓ Code vérifié avec succès', 'success');
+      setStep('password');
+    } catch (err) {
+      setError('Impossible de se connecter au serveur');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginWithPassword = async (password: string) => {
+    setLoading(true);
+    setError('');
+
+    try {
       const response = await fetch('http://localhost:3000/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, password: otp }),
+        body: JSON.stringify({ phone, password }),
       });
 
       const data = await response.json();
@@ -56,23 +117,30 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
         return;
       }
 
-      login(data.user, data.access_token);
-      
-      // Redirect based on role
-      switch (data.user.role) {
-        case 'AGRICULTEUR':
+      // Normalize user with lowercase role
+      const normalizedUser = {
+        ...data.user,
+        role: data.user.role.toLowerCase(),
+      };
+      login(normalizedUser, data.access_token);
+
+      // Redirect based on role (lowercase)
+      const role = data.user.role.toLowerCase();
+      switch (role) {
+        case 'agriculteur':
           navigate('/agriculteur/dashboard');
           break;
-        case 'ACHETEUR':
+        case 'acheteur':
           navigate('/acheteur/dashboard');
           break;
-        case 'TRANSPORTEUR':
+        case 'transporteur':
           navigate('/transporteur/dashboard');
           break;
-        case 'AGENT':
+        case 'agent':
           navigate('/agent/dashboard');
           break;
-        case 'ADMIN':
+        case 'admin':
+        case 'superadmin':
           navigate('/admin/dashboard');
           break;
         default:
@@ -85,104 +153,158 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
     }
   };
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8 }}
-      className="w-full max-w-md bg-white/10 backdrop-blur-md p-8 md:p-10 rounded-2xl border border-white/20 shadow-2xl mx-auto text-white"
-    >
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-serif mb-2">AgriConnect</h1>
-        <p className="text-white/70 text-sm">Connectez-vous avec votre numéro</p>
-      </div>
+  const [password, setPassword] = useState('');
 
-      {step === 'phone' ? (
-        <div className="space-y-5">
-          <div>
-            <label className="block text-sm text-white/70 mb-2">Téléphone</label>
-            <div className="flex items-center bg-black/30 border border-white/20 rounded-lg overflow-hidden focus-within:border-green-400 transition">
-              <span className="bg-black/50 px-4 py-3 text-white/70 border-r border-white/20">+261</span>
+  return (
+    <>
+      <VirtualNotification
+        show={notification.show}
+        message={notification.message}
+        type={notification.type}
+        onClose={() => setNotification({ show: false, message: '', type: 'success' })}
+      />
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="w-full max-w-md bg-white/10 backdrop-blur-md p-8 md:p-10 rounded-2xl border border-white/20 shadow-2xl mx-auto text-white"
+      >
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-serif mb-2">AgriConnect</h1>
+          <p className="text-white/70 text-sm">Connectez-vous avec votre numéro</p>
+        </div>
+
+        {step === 'phone' ? (
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm text-white/70 mb-2">Téléphone</label>
+              <div className="flex items-center bg-black/30 border border-white/20 rounded-lg overflow-hidden focus-within:border-green-400 transition">
+                <span className="bg-black/50 px-4 py-3 text-white/70 border-r border-white/20">+261</span>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                  placeholder="34 12 345 67"
+                  className="flex-1 px-4 py-3 bg-transparent outline-none text-white placeholder-white/50 text-sm"
+                />
+              </div>
+            </div>
+
+            {error && (
+              <div className="flex items-center space-x-2 text-red-400">
+                <AlertCircle size={16} />
+                <span className="text-sm">{error}</span>
+              </div>
+            )}
+
+            <button
+              onClick={requestOtp}
+              disabled={loading}
+              className="w-full py-4 mt-2 border cursor-pointer border-green-400 text-green-400 font-bold uppercase text-sm tracking-widest hover:bg-green-400 hover:text-black transition-colors rounded-lg disabled:opacity-50"
+            >
+              {loading ? 'Envoi...' : 'Recevoir le code'}
+            </button>
+          </div>
+        ) : step === 'otp' ? (
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm text-white/70 mb-2">Code de vérification</label>
               <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                placeholder="34 12 345 67"
-                className="flex-1 px-4 py-3 bg-transparent outline-none text-white placeholder-white/50 text-sm"
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="123456"
+                className="w-full bg-black/30 border border-white/20 p-4 rounded-lg focus:outline-none focus:border-green-400 transition text-sm text-white placeholder-white/50 text-center tracking-widest"
+              />
+              {debugOtp && (
+                <p className="text-xs text-green-400 mt-2 text-center">Code (dev): {debugOtp}</p>
+              )}
+            </div>
+
+            {error && (
+              <div className="flex items-center space-x-2 text-red-400">
+                <AlertCircle size={16} />
+                <span className="text-sm">{error}</span>
+              </div>
+            )}
+
+            <button
+              onClick={verifyOtp}
+              disabled={loading}
+              className="w-full py-4 mt-2 bg-green-400 text-black font-bold uppercase text-sm tracking-widest cursor-pointer hover:bg-green-500 transition-colors rounded-lg disabled:opacity-50"
+            >
+              {loading ? 'Vérification...' : 'Vérifier le code'}
+            </button>
+
+            <button
+              onClick={() => {
+                setStep('phone');
+                setOtp('');
+                setError('');
+                setDebugOtp('');
+              }}
+              className="w-full text-sm text-white/50 hover:text-white transition underline text-center"
+            >
+              ← Changer de numéro
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm text-white/70 mb-2">Mot de passe</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Entrez votre mot de passe"
+                className="w-full bg-black/30 border border-white/20 p-4 rounded-lg focus:outline-none focus:border-green-400 transition text-sm text-white placeholder-white/50"
               />
             </div>
+
+            {error && (
+              <div className="flex items-center space-x-2 text-red-400">
+                <AlertCircle size={16} />
+                <span className="text-sm">{error}</span>
+              </div>
+            )}
+
+            <button
+              onClick={() => loginWithPassword(password)}
+              disabled={loading}
+              className="w-full py-4 mt-2 bg-green-400 text-black font-bold uppercase text-sm tracking-widest cursor-pointer hover:bg-green-500 transition-colors rounded-lg disabled:opacity-50"
+            >
+              {loading ? 'Connexion...' : 'Se connecter'}
+            </button>
+
+            <button
+              onClick={() => {
+                setStep('otp');
+                setPassword('');
+                setError('');
+              }}
+              className="w-full text-sm text-white/50 hover:text-white transition underline text-center"
+            >
+              ← Retour
+            </button>
           </div>
+        )}
 
-          {error && (
-            <div className="flex items-center space-x-2 text-red-400">
-              <AlertCircle size={16} />
-              <span className="text-sm">{error}</span>
-            </div>
-          )}
-
-          <button
-            onClick={requestOtp}
-            disabled={loading}
-            className="w-full py-4 mt-2 border cursor-pointer border-green-400 text-green-400 font-bold uppercase text-sm tracking-widest hover:bg-green-400 hover:text-black transition-colors rounded-lg disabled:opacity-50"
-          >
-            {loading ? 'Envoi...' : 'Recevoir le code SMS'}
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-5">
-          <div>
-            <label className="block text-sm text-white/70 mb-2">Code reçu par SMS</label>
-            <input
-              type="text"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.slice(0, 6))}
-              placeholder="123456"
-              className="w-full bg-black/30 border border-white/20 p-4 rounded-lg focus:outline-none focus:border-green-400 transition text-sm text-white placeholder-white/50 text-center tracking-widest"
-            />
+        <div className="mt-8 pt-6 border-t border-white/20 space-y-4">
+          <p className="text-center text-sm text-white/70">
+            Pas encore inscrit ?{' '}
+            <button onClick={() => onNavigate && onNavigate('register')} className="cursor-pointer text-green-400 hover:text-green-300 font-bold transition">
+              Créer un compte
+            </button>
+          </p>
+          <div className="text-center">
+            <button onClick={() => onNavigate && onNavigate('forgot-password')} className="cursor-pointer text-white/50 hover:text-white text-sm transition">
+              Mot de passe oublié ?
+            </button>
           </div>
-
-          {error && (
-            <div className="flex items-center space-x-2 text-red-400">
-              <AlertCircle size={16} />
-              <span className="text-sm">{error}</span>
-            </div>
-          )}
-
-          <button
-            onClick={verifyOtp}
-            disabled={loading}
-            className="w-full py-4 mt-2 bg-green-400 text-black font-bold uppercase text-sm tracking-widest cursor-pointer hover:bg-green-500 transition-colors rounded-lg disabled:opacity-50"
-          >
-            {loading ? 'Vérification...' : 'Se connecter'}
-          </button>
-
-          <button
-            onClick={() => {
-              setStep('phone');
-              setOtp('');
-              setError('');
-            }}
-            className="w-full text-sm text-white/50 hover:text-white transition underline text-center"
-          >
-            ← Changer de numéro
-          </button>
         </div>
-      )}
-
-      <div className="mt-8 pt-6 border-t border-white/20 space-y-4">
-        <p className="text-center text-sm text-white/70">
-          Pas encore inscrit ?{' '}
-          <button onClick={() => onNavigate && onNavigate('register')} className="cursor-pointer text-green-400 hover:text-green-300 font-bold transition">
-            Créer un compte
-          </button>
-        </p>
-        <div className="text-center">
-          <button onClick={() => onNavigate && onNavigate('forgot-password')} className="cursor-pointer text-white/50 hover:text-white text-sm transition">
-            Mot de passe oublié ?
-          </button>
-        </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </>
   );
 };
 

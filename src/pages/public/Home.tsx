@@ -2,12 +2,12 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiMenu } from "react-icons/fi";
 import { FaInstagram, FaTwitter, FaFacebook } from "react-icons/fa";
+import Logo from "../../assets/icons/logo.png";
 import colors from "../../components/common/colors";
-import Agricol1 from "../../assets/images/agricol1.jpeg";
-import Agricol2 from "../../assets/images/agricol2.jpeg";
-import Agricol3 from "../../assets/images/agricol3.jpeg";
-import Agricol4 from "../../assets/images/agricol4.jpeg";
-import Logo from "../../assets/images/farming.jpeg";
+import Vanile from "../../assets/images/vanile.jpeg";
+import Riz from "../../assets/images/riz.jpeg";
+import Legumes from "../../assets/images/legume.jpeg";
+import Fruits from "../../assets/images/litchi.jpeg";
 
 import Contact from "./Contact";
 import Agricol from "./Agricol";
@@ -22,7 +22,7 @@ const Home: React.FC = () => {
   const [activePage, setActivePage] = useState<Page>("home");
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [lang, setLang] = useState<"en" | "fr">("en");
-  const [carouselTranslate, setCarouselTranslate] = useState<number>(0);
+
 
   const menuRef = useRef<HTMLDivElement>(null);
   const carouselWrapperRef = useRef<HTMLDivElement>(null);
@@ -30,11 +30,30 @@ const Home: React.FC = () => {
   const touchStartX = useRef<number>(0);
 
   const cards = [
-    { id: 0, title: "Maïs biologique", location: "Madagascar - Hautes terres", image: Agricol1 },
-    { id: 1, title: "Rizières traditionnelles", location: "Antananarivo - Région Analamanga", image: Agricol2 },
-    { id: 2, title: "Culture de tomates", location: "Itasy - Zones agricoles", image: Agricol3 },
-    { id: 3, title: "Plantation de légumes", location: "Vakinankaratra - Fermes locales", image: Agricol4 },
-    { id: 4, title: "Agriculture durable", location: "Coopératives rurales - Madagascar", image: Agricol1 },
+    {
+      id: 0,
+      title: "Cultures vivrières",
+      location: "Alaotra-Mangoro - Ambatondrazaka",
+      image: Riz, // image de rizière
+    },
+    {
+      id: 1,
+      title: "Cultures maraîchères",
+      location: "Vakinankaratra - Antsirabe",
+      image: Legumes, // tomate, carotte, chou, oignon
+    },
+    {
+      id: 2,
+      title: "Cultures de rente et épices",
+      location: "SAVA - Sambava",
+      image: Vanile, // vanille, girofle, café, cacao
+    },
+    {
+      id: 3,
+      title: "Cultures fruitières",
+      location: "Atsinanana - Toamasina",
+      image: Fruits, // litchi, mangue, banane, orange
+    },
   ];
   const activeData = cards[activeCard];
 
@@ -80,7 +99,7 @@ const Home: React.FC = () => {
     const totalWidth = innerRect.width;
     const visibleWidth = wrapperRect.width;
     if (totalWidth <= visibleWidth) {
-      setCarouselTranslate(0);
+      
       return;
     }
     const activeElement = inner.children[activeCard] as HTMLElement;
@@ -94,7 +113,7 @@ const Home: React.FC = () => {
     const minOffset = visibleWidth - totalWidth;
     const maxOffset = 0;
     offset = Math.min(maxOffset, Math.max(minOffset, offset));
-    setCarouselTranslate(offset);
+    
   }, [activeCard]);
 
   useEffect(() => {
@@ -256,7 +275,7 @@ const Home: React.FC = () => {
             <h2 className="text-7xl opacity-40 font-serif mb-4">{String(activeData.id + 1).padStart(2, "0")}</h2>
             <h1 className="text-4xl md:text-6xl font-serif mb-2 drop-shadow-lg">{activeData.title}</h1>
             <p className="text-white/80 mb-8 drop-shadow-md">{activeData.location}</p>
-            <button className="px-8 py-3 border border-white/50 cursor-pointer uppercase text-sm hover:bg-white hover:text-black transition backdrop-blur-sm">
+            <button className="hidden md:flex items-center gap-2 px-3 h-9 rounded-full text-sm font-medium transition bg-green-700/50 border border-white/20 text-white/80 hover:bg-white/10">
               {t[lang].explore}
             </button>
           </motion.div>
@@ -264,9 +283,9 @@ const Home: React.FC = () => {
 
         {activePage === "agricol" && <Agricol />}
         {activePage === "contact" && <Contact />}
-        {activePage === "login" && <Connexion onNavigate={(p: Page) => setActivePage(p)} />}
-        {activePage === "register" && <Inscription onNavigate={(p: Page) => setActivePage(p)} />}
-        {activePage === "forgot-password" && <ForgotPassword onNavigate={(p: Page) => setActivePage(p)} />}
+        {activePage === "login" && <Connexion onNavigate={(p: any) => setActivePage(p as Page)} />}
+        {activePage === "register" && <Inscription onNavigate={(p: any) => setActivePage(p as Page)} />}
+        {activePage === "forgot-password" && <ForgotPassword onNavigate={(p: any) => setActivePage(p as Page)} />}
       </main>
 
       {/* CARROUSEL 3D (z-index 20) */}

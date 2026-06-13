@@ -16,6 +16,10 @@ interface User {
   displayName?: string;
   role: UserRole;
   fullName?: string;
+  region?: string;
+  village?: string;
+  avatarUrl?: string;
+  avatar_url?: string; // fallback
 }
 
 interface AuthState {
@@ -26,6 +30,7 @@ interface AuthState {
 
   login: (user: User, token: string) => void;
   logout: () => void;
+  updateUser: (data: Partial<User>) => void;
 
   authenticate: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
@@ -61,6 +66,13 @@ export const useAuth = create<AuthState>((set) => ({
       token: null,
     });
   },
+
+  updateUser: (data) => set((state) => {
+    if (!state.user) return state;
+    const newUser = { ...state.user, ...data };
+    localStorage.setItem('agriconnect_user', JSON.stringify(newUser));
+    return { user: newUser };
+  }),
 
   authenticate: async (credentials) => {
     set({ isLoading: true });

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Users, TrendingUp, AlertTriangle, Activity, DollarSign,
   ShieldCheck, ArrowUpRight, CheckCircle, XCircle, Clock,
   Sprout, Truck, ShoppingCart, UserCheck, MoreHorizontal
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import api from '../../services/api';
 
 const glass: React.CSSProperties = {
   background: 'rgba(255,255,255,0.05)',
@@ -19,13 +20,31 @@ const ACCENT = '#a78bfa';
 
 const Dashboard: React.FC = () => {
   const [logTab, setLogTab] = useState('tous');
-
-  const stats = [
-    { label: 'Utilisateurs actifs',   value: '1 452', unit: '',   icon: Users,         accent: ACCENT,    trend: '+12%' },
-    { label: 'Volume transactions',   value: '25.4M', unit: 'Ar', icon: DollarSign,    accent: '#4ade80', trend: '+8%' },
-    { label: 'Signalements ouverts',  value: '7',     unit: '',   icon: AlertTriangle, accent: '#f87171', trend: '⚠ Urgent' },
+  const [stats, setStats] = useState([
+    { label: 'Utilisateurs actifs',   value: '0', unit: '',   icon: Users,         accent: ACCENT,    trend: '+0%' },
+    { label: 'Volume transactions',   value: '0', unit: 'Ar', icon: DollarSign,    accent: '#4ade80', trend: '+0%' },
+    { label: 'Commandes actives',  value: '0',     unit: '',   icon: Activity, accent: '#f87171', trend: 'Global' },
     { label: 'Santé système',         value: '99.9',  unit: '%',  icon: Activity,      accent: '#38bdf8', trend: 'Normal' },
-  ];
+  ]);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await api.get('/users/admin/stats');
+        setStats([
+          { label: 'Utilisateurs inscrits',   value: response.data.totalUsers.toString(), unit: '',   icon: Users,         accent: ACCENT,    trend: 'Global' },
+          { label: 'Volume transactions',   value: response.data.totalRevenue.toLocaleString('fr-MG'), unit: 'Ar', icon: DollarSign,    accent: '#4ade80', trend: 'Global' },
+          { label: 'Commandes actives',  value: response.data.activeOrders.toString(),     unit: '',   icon: Activity, accent: '#f87171', trend: 'En cours' },
+          { label: 'Santé système',         value: '99.9',  unit: '%',  icon: Activity,      accent: '#38bdf8', trend: 'Normal' },
+        ]);
+        setTotalRevenue(response.data.totalRevenue);
+      } catch (error) {
+        console.error('Error fetching admin stats:', error);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const roles = [
     { label: 'Agriculteurs',  count: 892, pct: 61, color: '#4ade80', icon: <Sprout size={13} style={{ color: '#4ade80' }} /> },
@@ -136,8 +155,8 @@ const Dashboard: React.FC = () => {
               <h3 className="text-white font-bold text-lg">Volume des Transactions</h3>
             </div>
             <div className="text-right">
-              <p className="font-bold text-2xl leading-none" style={{ color: '#4ade80' }}>25.4M Ar</p>
-              <p className="text-xs mt-0.5" style={{ color: '#4ade8099' }}>↑ +8% vs 2025</p>
+              <p className="font-bold text-2xl leading-none" style={{ color: '#4ade80' }}>{totalRevenue.toLocaleString('fr-MG')} Ar</p>
+              <p className="text-xs mt-0.5" style={{ color: '#4ade8099' }}>Global</p>
             </div>
           </div>
           <div className="flex items-end gap-1.5 mt-6" style={{ height: 110 }}>

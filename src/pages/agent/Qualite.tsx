@@ -1,13 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ShieldAlert, CheckCircle, Search, Clock } from 'lucide-react';
+import api from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 
 const Qualite: React.FC = () => {
-  const controles = [
-    { id: '#QC-001', produit: 'Maïs (Lot 1042)', agriculteur: 'Jean Rakoto', statut: 'Conforme', date: 'Aujourd\'hui', agent: 'Vous' },
-    { id: '#QC-002', produit: 'Tomates rondes', agriculteur: 'Coop. Analamanga', statut: 'À vérifier', date: 'Aujourd\'hui', agent: 'Vous' },
-    { id: '#QC-003', produit: 'Riz rouge', agriculteur: 'Ferme Vakinankaratra', statut: 'Non conforme', date: 'Hier', agent: 'Agent Rakotomavo' },
-  ];
+  const { user } = useAuth();
+  const [controles, setControles] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const fetchControles = async () => {
+    try {
+      const response = await api.get('/quality');
+      const formatted = response.data.map((q: any) => ({
+        id: `#QC-${q.id.slice(0, 5).toUpperCase()}`,
+        produit: q.product_name || `Produit #${q.product_id.slice(0, 5)}`,
+        agriculteur: q.farmer_name || 'Agriculteur',
+        statut: q.status === 'APPROVED' ? 'Conforme' : q.status === 'REJECTED' ? 'Non conforme' : 'À vérifier',
+        date: new Date(q.created_at).toLocaleDateString('fr-FR'),
+        agent: q.agent_id === user?.id ? 'Vous' : (q.agent_name || 'Agent inconnu'),
+      }));
+      setControles(formatted);
+    } catch (error) {
+      console.error('Error fetching quality reports:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchControles();
+  }, [user]);
+
+  const filtered = controles.filter(c => 
+    c.produit.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    c.agriculteur.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <motion.div 
@@ -26,6 +52,8 @@ const Qualite: React.FC = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={18} />
           <input 
             type="text" 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Rechercher un lot..." 
             className="w-full bg-black/30 border border-white/20 rounded-lg py-2 pl-10 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-green-400 transition"
           />
@@ -34,7 +62,7 @@ const Qualite: React.FC = () => {
 
       <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6">
         <div className="space-y-4">
-          {controles.map((ctrl) => (
+          {filtered.map((ctrl) => (
             <div key={ctrl.id} className="bg-black/20 rounded-xl border border-white/5 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-white/20 transition">
               <div className="flex items-center gap-4">
                 <div className={`p-3 rounded-xl ${

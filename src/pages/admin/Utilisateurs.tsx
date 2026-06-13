@@ -1,16 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Edit, Trash2, Filter } from 'lucide-react';
+import api from '../../services/api';
 
 const Utilisateurs: React.FC = () => {
   const [filter, setFilter] = useState('Tous');
+  const [users, setUsers] = useState<any[]>([]);
 
-  const users = [
-    { id: 'U-1001', nom: 'Jean Rakoto', role: 'agriculteur', status: 'Actif', inscription: '12 Sep 2023' },
-    { id: 'U-1002', nom: 'Supermarché Leader', role: 'acheteur', status: 'Actif', inscription: '15 Sep 2023' },
-    { id: 'U-1003', nom: 'Logistique Rapide', role: 'transporteur', status: 'Suspendu', inscription: '20 Sep 2023' },
-    { id: 'U-1004', nom: 'Agent Rasoa', role: 'agent', status: 'Actif', inscription: '01 Oct 2023' },
-  ];
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await api.get('/users');
+        const formatted = response.data.map((u: any) => ({
+          id: u.id.slice(0, 8),
+          nom: u.full_name || u.phone,
+          role: u.role.toLowerCase(),
+          status: 'Actif',
+          inscription: new Date(u.created_at).toLocaleDateString('fr-FR'),
+        }));
+        setUsers(formatted);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   const filteredUsers = filter === 'Tous' ? users : users.filter(u => u.role === filter.toLowerCase());
 
