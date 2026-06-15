@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 
 const Contact: React.FC = () => {
   return (
-    <div className="w-full px-4 md:px-10 py-12 text-white">
+    <div className="w-full h-[75vh] px-4 md:px-10 py-12 text-white">
 
       {/* HEADER */}
       <motion.div

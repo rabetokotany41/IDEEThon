@@ -99,7 +99,7 @@ const Home: React.FC = () => {
     const totalWidth = innerRect.width;
     const visibleWidth = wrapperRect.width;
     if (totalWidth <= visibleWidth) {
-      
+
       return;
     }
     const activeElement = inner.children[activeCard] as HTMLElement;
@@ -113,7 +113,7 @@ const Home: React.FC = () => {
     const minOffset = visibleWidth - totalWidth;
     const maxOffset = 0;
     offset = Math.min(maxOffset, Math.max(minOffset, offset));
-    
+
   }, [activeCard]);
 
   useEffect(() => {
@@ -184,23 +184,47 @@ const Home: React.FC = () => {
       </AnimatePresence>
 
       {/* HEADER (z-index 30) */}
-      <header className="absolute top-0 w-full h-24 z-30 flex items-center justify-between px-8 md:px-[10%] backdrop-blur-sm">
+      <header className="absolute top-0 w-full h-24 z-30 flex items-center justify-between px-8 md:px-[10%]">
         <div className="flex items-center gap-2 text-xl font-serif cursor-pointer" onClick={() => handleNavClick("home")}>
           <img src={Logo} alt="Logo" className="w-8 h-8 rounded-full object-cover" />
           AgriConnect
         </div>
 
-        <nav className="hidden md:flex gap-10 text-sm uppercase items-center">
-          <button onClick={() => handleNavClick("home")} className={`transition ${activePage === "home" ? "cursor-pointer text-green-300 font-bold" : "hover:text-green-300"}`}>
+        <nav className="hidden md:flex items-center gap-10 text-sm uppercase">
+          <button
+            onClick={() => handleNavClick("home")}
+            className={`transition cursor-pointer ${activePage === "home"
+                ? "text-green-300 font-bold"
+                : "text-white/60 hover:text-green-300"
+              }`}
+          >
             {t[lang].home}
           </button>
-          <button onClick={() => handleNavClick("agricol")} className={`transition ${activePage === "agricol" ? "cursor-pointer text-green-300 font-bold" : "text-white/60 hover:text-green-300"}`}>
+
+          <button
+            onClick={() => handleNavClick("agricol")}
+            className={`transition cursor-pointer ${activePage === "agricol"
+                ? "text-green-300 font-bold"
+                : "text-white/60 hover:text-green-300"
+              }`}
+          >
             {t[lang].marketplace}
           </button>
-          <button onClick={() => handleNavClick("contact")} className={`transition ${activePage === "contact" ? "cursor-pointer text-green-300 font-bold" : "text-white/60 hover:text-green-300"}`}>
+
+          <button
+            onClick={() => handleNavClick("contact")}
+            className={`transition cursor-pointer ${activePage === "contact"
+                ? "text-green-300 font-bold"
+                : "text-white/60 hover:text-green-300"
+              }`}
+          >
             {t[lang].contact}
           </button>
-          <button onClick={() => handleNavClick("login")} className="px-5 cursor-pointer py-2 rounded-full border border-green-400 text-green-400 hover:bg-green-400 hover:text-black font-bold transition">
+
+          <button
+            onClick={() => handleNavClick("login")}
+            className="cursor-pointer px-5 py-2 rounded-full border border-green-400 text-green-400 font-bold transition hover:bg-green-400 hover:text-black"
+          >
             {t[lang].connect}
           </button>
         </nav>

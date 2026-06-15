@@ -187,7 +187,7 @@ const DashboardAcheteur: React.FC = () => {
         <motion.button
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
-          onClick={() => navigate('/products')}
+          onClick={() => navigate('/acheteur/recherche')}
           className="flex items-center gap-2 px-5 py-3 rounded-2xl font-semibold text-sm text-white"
           style={{ background: 'linear-gradient(135deg,#3b82f6,#6366f1)', boxShadow: '0 8px 24px rgba(99,102,241,0.28)' }}
         >
@@ -227,7 +227,7 @@ const DashboardAcheteur: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-white font-bold text-base">Mes Commandes</h3>
             <button
-              onClick={() => navigate('/orders')}
+              onClick={() => navigate('/acheteur/commandes')}
               className="flex items-center gap-1 text-xs font-semibold hover:opacity-80 transition"
               style={{ color: ACCENT }}
             >
@@ -256,7 +256,7 @@ const DashboardAcheteur: React.FC = () => {
               shown.map((order, idx) => (
                 <div
                   key={order.orderId || idx}
-                  onClick={() => navigate(`/orders/${order.orderId}`)}
+                  onClick={() => navigate('/acheteur/commandes')}
                   className="flex items-center gap-3 p-4 rounded-xl transition-all cursor-pointer hover:bg-white/10"
                   style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
                 >
@@ -297,7 +297,7 @@ const DashboardAcheteur: React.FC = () => {
               suggestions.map((prod) => (
                 <div
                   key={prod.id}
-                  onClick={() => navigate(`/products/${prod.id}`)}
+                  onClick={() => navigate('/acheteur/recherche')}
                   className="p-4 rounded-xl transition-all cursor-pointer group hover:bg-white/10"
                   style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
                 >
@@ -314,7 +314,7 @@ const DashboardAcheteur: React.FC = () => {
                       <div className="flex items-center justify-between mt-2">
                         <span className="font-bold text-sm" style={{ color: ACCENT }}>{prod.price}</span>
                         <button
-                          onClick={(e) => { e.stopPropagation(); navigate(`/products/${prod.id}`); }}
+                          onClick={(e) => { e.stopPropagation(); navigate('/acheteur/recherche'); }}
                           className="text-[11px] font-semibold px-3 py-1 rounded-lg transition-all"
                           style={{ background: 'rgba(96,165,250,0.15)', color: ACCENT, border: '1px solid rgba(96,165,250,0.25)' }}
                         >

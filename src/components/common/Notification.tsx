@@ -63,7 +63,7 @@ const NotificationsPage: React.FC = () => {
         params: {
           page: currentPage,
           limit: 20,
-          unreadOnly: selectedFilter === 'unread' ? true : undefined,
+          filter: selectedFilter, // 'all' | 'unread' — matches backend @Query('filter')
         },
       });
       // Adapter selon la structure de votre backend
@@ -82,10 +82,28 @@ const NotificationsPage: React.FC = () => {
     }
   }, [user, page, selectedFilter]);
 
-  // Rechargement initial ou changement de filtre
+  // Seed examples then load on first mount
   useEffect(() => {
+    if (!user) return;
+    const init = async () => {
+      try {
+        // Ensures role-appropriate example notifications exist (no-op if already present)
+        await api.post('/notifications/seed-examples');
+      } catch {
+        // Non-blocking: ignore seed errors
+      }
+      fetchNotifications(true);
+    };
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  // Reload when filter changes (after initial mount)
+  useEffect(() => {
+    if (!user) return;
     fetchNotifications(true);
-  }, [selectedFilter, user, fetchNotifications]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFilter]);
 
   // Chargement supplémentaire (pagination)
   const loadMore = () => {
