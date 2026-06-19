@@ -8,7 +8,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAuth } from '../../hooks/useAuth';
-import api from '../../services/api';
+import api from '../../store/services/api';
 
 interface Notification {
   id: string;

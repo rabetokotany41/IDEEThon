@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import api from '../../services/api';
+import api from '../../store/services/api';
 import { useAuth } from '../../hooks/useAuth';
 
 /* Styles */

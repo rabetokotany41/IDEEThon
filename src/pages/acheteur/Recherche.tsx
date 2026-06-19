@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, ShoppingCart, Star, AlertCircle, CheckCircle } from 'lucide-react';
-import api from '../../services/api';
+import api from '../../store/services/api';
 import { useAuth } from '../../hooks/useAuth';
 
 const glassCard = {

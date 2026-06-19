@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart, PieChart, Activity, TrendingUp } from 'lucide-react';
-import api from '../../services/api';
+import api from '../../store/services/api';
 
 // Types pour les stats
 interface DashboardStats {

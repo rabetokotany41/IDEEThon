@@ -5,7 +5,7 @@ import {
   Sprout, Truck, ShoppingCart, UserCheck, MoreHorizontal, Loader2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import api from '../../services/api';
+import api from '../../store/services/api';
 
 const glass: React.CSSProperties = {
   background: 'rgba(255,255,255,0.05)',

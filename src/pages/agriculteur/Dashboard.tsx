@@ -4,7 +4,7 @@ import {
   Sun, Wind, ShoppingCart, Image as ImageIcon, AlertTriangle, Droplets, Thermometer 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import api from '../../services/api';
+import api from '../../store/services/api';
 import { useAuth } from '../../hooks/useAuth';
 import type Dashboard from '../admin/Dashboard';
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet, Search, CheckCircle, XCircle, Loader2 } from 'lucide-react';
-import api from '../../services/api';
+import api from '../../store/services/api';
 
 // Types correspondant à la table loans
 interface Loan {

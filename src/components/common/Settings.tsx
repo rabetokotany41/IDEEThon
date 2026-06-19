@@ -5,7 +5,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import api from '../../services/api';
+import api from '../../store/services/api';
 import Swal from 'sweetalert2';
 
 interface UserProfile {

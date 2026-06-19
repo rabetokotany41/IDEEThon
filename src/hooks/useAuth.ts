@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { authService } from '../services/auth.service';
-import type { LoginCredentials, RegisterData } from '../services/auth.service';
+import { authService } from '../store/services/auth.service';
+import type { LoginCredentials, RegisterData } from '../store/services/auth.service';
 
 export type UserRole =
   | 'agriculteur'

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit2, Trash2, X, Image as ImageIcon } from 'lucide-react';
-import api from '../../services/api';
+import api from '../../store/services/api';
 import { useAuth } from '../../hooks/useAuth';
 
 interface Product {
