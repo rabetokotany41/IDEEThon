@@ -1,8 +1,68 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Navigation, Package, DollarSign, AlertCircle } from 'lucide-react';
+import { MapPin, Navigation, Package, DollarSign, AlertCircle, Truck, Map as MapIcon, X } from 'lucide-react';
 import api from '../../store/services/api';
 import { useAuth } from '../../hooks/useAuth';
+import { MapContainer, TileLayer, Marker, Polyline, Popup, Tooltip, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for default Leaflet icon in React
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Composant pour dessiner le trajet réel via OSRM
+const RealRoute = ({ origin, dest }: { origin: [number, number], dest: [number, number] }) => {
+  const [routePath, setRoutePath] = useState<[number, number][]>([]);
+  const [distanceKm, setDistanceKm] = useState<string>('');
+  const map = useMap();
+
+  useEffect(() => {
+    const fetchRoute = async () => {
+      try {
+        // OSRM attend lng,lat
+        const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${origin[1]},${origin[0]};${dest[1]},${dest[0]}?overview=full&geometries=geojson`);
+        const data = await response.json();
+        
+        if (data.routes && data.routes[0]) {
+          const route = data.routes[0];
+          // Convertir de [lng, lat] à [lat, lng] pour Leaflet
+          const coordinates = route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+          setRoutePath(coordinates);
+          setDistanceKm((route.distance / 1000).toFixed(1) + ' km');
+          
+          // Ajuster la vue pour voir tout le trajet
+          const bounds = L.latLngBounds([origin, dest]);
+          coordinates.forEach((c: [number, number]) => bounds.extend(c));
+          map.fitBounds(bounds, { padding: [50, 50] });
+        } else {
+          // Fallback ligne droite
+          setRoutePath([origin, dest]);
+        }
+      } catch (err) {
+        console.error("Erreur OSRM:", err);
+        setRoutePath([origin, dest]);
+      }
+    };
+    fetchRoute();
+  }, [origin, dest, map]);
+
+  if (routePath.length === 0) return null;
+
+  return (
+    <Polyline positions={routePath} pathOptions={{ color: '#3b82f6', weight: 6, opacity: 0.8 }}>
+      {distanceKm && (
+        <Tooltip permanent direction="top" className="bg-white/90 text-blue-600 border border-blue-200 rounded-lg font-bold shadow-lg">
+          {distanceKm}
+        </Tooltip>
+      )}
+    </Polyline>
+  );
+};
 
 // Types correspondant à la base de données
 interface DeliveryMission {
@@ -26,6 +86,7 @@ interface FormattedMission {
   prix: string;
   date: string;
   orderId: string;
+  vehicleType: string;
 }
 
 const Missions: React.FC = () => {
@@ -34,6 +95,7 @@ const Missions: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [showMapId, setShowMapId] = useState<string | null>(null);
 
   const fetchAvailableMissions = async () => {
     if (!user) return;
@@ -41,13 +103,14 @@ const Missions: React.FC = () => {
     setError(null);
     try {
       // Récupère les missions sans transporteur affecté et avec statut PENDING ou PREPARING
-      const response = await api.get<DeliveryMission[]>('/delivery/missions/available');
+      const response = await api.get<any[]>('/delivery/missions/available');
       const formatted = response.data.map((m) => ({
         id: m.id,
         depart: m.origin,
         arrivee: m.destination,
         distance: m.distance ? `${m.distance} km` : 'Distance non renseignée',
-        charge: `Commande N°${m.order_id.slice(0, 6).toUpperCase()}`,
+        charge: m.product_name ? `${m.quantity} ${m.unit} de ${m.product_name}` : `Commande N°${m.order_id.slice(0, 6).toUpperCase()}`,
+        vehicleType: m.vehicle_type || 'Véhicule standard',
         prix: m.delivery_price.toLocaleString('fr-MG') + ' Ar',
         date: new Date(m.created_at).toLocaleDateString('fr-FR'),
         orderId: m.order_id,
@@ -121,7 +184,7 @@ const Missions: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {missions.map((mission) => {
-            const urgency = getUrgencyLevel(mission.date); // simplifié, on utilise la date créée
+            const urgency = getUrgencyLevel(mission.date);
             return (
               <div
                 key={mission.id}
@@ -152,14 +215,71 @@ const Missions: React.FC = () => {
                 </div>
 
                 <div className="p-5 flex-1 flex flex-col justify-between gap-4">
-                  <div className="flex justify-between text-sm">
-                    <div className="flex items-center gap-2 text-white/70">
-                      <Package size={16} /> {mission.charge}
+                  <div className="flex flex-wrap gap-y-2 justify-between text-sm">
+                    <div className="flex items-center gap-2 text-white/70 w-full">
+                      <Package size={16} className="text-orange-400" /> {mission.charge}
                     </div>
                     <div className="flex items-center gap-2 text-white/70">
-                      <Navigation size={16} /> {mission.date}
+                      <Truck size={16} className="text-blue-400" /> Requis: {mission.vehicleType}
+                    </div>
+                    <div className="flex items-center gap-2 text-white/70">
+                      <Navigation size={16} className="text-green-400" /> {mission.date}
                     </div>
                   </div>
+
+                  {/* Bouton Carte */}
+                  <div className="mt-2 border-t border-white/5 flex justify-end pt-2">
+                    <button
+                      onClick={() => setShowMapId(showMapId === mission.id ? null : mission.id)}
+                      className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition"
+                    >
+                      {showMapId === mission.id ? <X size={16} /> : <MapIcon size={16} />}
+                      {showMapId === mission.id ? 'Masquer la carte' : 'Voir sur la carte'}
+                    </button>
+                  </div>
+
+                  {/* Conteneur de la Carte Leaflet */}
+                  {showMapId === mission.id && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: '250px' }}
+                      className="mt-2 rounded-xl overflow-hidden border border-white/10"
+                    >
+                      {(() => {
+                        // Coordonnées déterministes basées sur l'ID pour la démo
+                        const hash = mission.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+                        const baseLat = -18.8792; // Antananarivo
+                        const baseLng = 47.5079;
+                        
+                        const originLat = baseLat + ((hash % 100) / 1500);
+                        const originLng = baseLng - (((hash * 2) % 100) / 1500);
+                        const destLat = baseLat - (((hash * 3) % 100) / 1500);
+                        const destLng = baseLng + (((hash * 4) % 100) / 1500);
+                        
+                        const origin: [number, number] = [originLat, originLng];
+                        const dest: [number, number] = [destLat, destLng];
+                        const center: [number, number] = [(originLat + destLat) / 2, (originLng + destLng) / 2];
+
+                        return (
+                          <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%', background: '#e5e5e5' }}>
+                            <TileLayer
+                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            />
+                            <Marker position={origin}>
+                              <Popup>Origine : {mission.depart}</Popup>
+                            </Marker>
+                            <Marker position={dest}>
+                              <Popup>Destination : {mission.arrivee}</Popup>
+                            </Marker>
+                            
+                            {/* Tracé de l'itinéraire réel sur route */}
+                            <RealRoute origin={origin} dest={dest} />
+                          </MapContainer>
+                        );
+                      })()}
+                    </motion.div>
+                  )}
 
                   <button
                     onClick={() => handleAccept(mission.id)}

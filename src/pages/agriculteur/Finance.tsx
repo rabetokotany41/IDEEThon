@@ -46,9 +46,9 @@ const Finance: React.FC = () => {
     const fetchLoans = async () => {
       try {
         const response = await api.get(`/loans/farmer/${user.id}`);
-        // Filtrer les prêts actifs (status = 'active' ou 'approved')
+        // Filtrer les prêts actifs ou en attente
         const active = response.data.filter((loan: Loan) => 
-          loan.status === 'active' || loan.status === 'approved'
+          loan.status === 'active' || loan.status === 'approved' || loan.status === 'pending' || (loan.status as string) === 'PENDING'
         );
         setActiveLoans(active);
       } catch (err) {
@@ -82,7 +82,7 @@ const Finance: React.FC = () => {
         const fetchLoans = async () => {
           const response = await api.get(`/loans/farmer/${user.id}`);
           const active = response.data.filter((loan: Loan) => 
-            loan.status === 'active' || loan.status === 'approved'
+            loan.status === 'active' || loan.status === 'approved' || loan.status === 'pending' || (loan.status as string) === 'PENDING'
           );
           setActiveLoans(active);
         };
@@ -102,9 +102,9 @@ const Finance: React.FC = () => {
       // Endpoint à adapter selon votre backend
       await api.patch(`/loans/${loanId}/pay`, {});
       // Recharger les prêts
-      const response = await api.get(`/loans/farmer/${user?.id}`);
+      const response = await api.get(`/loans/farmer/${user?.id || (user as any)?.sub}`);
       const active = response.data.filter((loan: Loan) => 
-        loan.status === 'active' || loan.status === 'approved'
+        loan.status === 'active' || loan.status === 'approved' || loan.status === 'pending'
       );
       setActiveLoans(active);
       // Afficher un message de succès (toast)
@@ -260,8 +260,11 @@ const Finance: React.FC = () => {
           ) : (
             <div className="space-y-6">
               {activeLoans.map((loan) => {
-                const progress = (loan.paid_installments / loan.total_installments) * 100;
-                const remaining = loan.remaining_amount || (loan.amount + (loan.amount * interestRate * loan.duration_months) - (loan.monthly_payment * loan.paid_installments));
+                const paidInstallments = loan.paid_installments || 0;
+                const totalInstallments = loan.total_installments || loan.duration_months || 1;
+                const progress = (paidInstallments / totalInstallments) * 100;
+                const monthlyPayment = loan.monthly_payment || ((loan.amount + (loan.amount * interestRate * loan.duration_months)) / totalInstallments);
+                const remaining = loan.remaining_amount || (loan.amount + (loan.amount * interestRate * loan.duration_months) - (monthlyPayment * paidInstallments));
                 return (
                   <div key={loan.id} className="bg-black/20 rounded-xl border border-white/5 p-5 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
@@ -305,7 +308,7 @@ const Finance: React.FC = () => {
                           </div>
                           <div className="text-right">
                             <p className="text-white/40 text-xs">Mensualité</p>
-                            <p className="text-yellow-400 font-bold">{loan.monthly_payment.toLocaleString('fr-MG')} Ar</p>
+                            <p className="text-yellow-400 font-bold">{monthlyPayment.toLocaleString('fr-MG')} Ar</p>
                           </div>
                         </div>
                         {loan.next_due_date && (

@@ -1,10 +1,69 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Truck, CheckCircle, AlertCircle } from 'lucide-react';
+import { Truck, CheckCircle, AlertCircle, Map as MapIcon, X } from 'lucide-react';
 import api from '../../store/services/api';
 import { useAuth } from '../../hooks/useAuth';
+import { MapContainer, TileLayer, Marker, Polyline, Popup, Tooltip, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
-// Types correspondant à la table delivery_missions
+// Fix for default Leaflet icon in React
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Composant pour dessiner le trajet réel via OSRM
+const RealRoute = ({ origin, dest }: { origin: [number, number], dest: [number, number] }) => {
+  const [routePath, setRoutePath] = useState<[number, number][]>([]);
+  const [distanceKm, setDistanceKm] = useState<string>('');
+  const map = useMap();
+
+  useEffect(() => {
+    const fetchRoute = async () => {
+      try {
+        // OSRM attend lng,lat
+        const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${origin[1]},${origin[0]};${dest[1]},${dest[0]}?overview=full&geometries=geojson`);
+        const data = await response.json();
+        
+        if (data.routes && data.routes[0]) {
+          const route = data.routes[0];
+          // Convertir de [lng, lat] à [lat, lng] pour Leaflet
+          const coordinates = route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+          setRoutePath(coordinates);
+          setDistanceKm((route.distance / 1000).toFixed(1) + ' km');
+          
+          // Ajuster la vue pour voir tout le trajet
+          const bounds = L.latLngBounds([origin, dest]);
+          coordinates.forEach((c: [number, number]) => bounds.extend(c));
+          map.fitBounds(bounds, { padding: [50, 50] });
+        } else {
+          // Fallback ligne droite
+          setRoutePath([origin, dest]);
+        }
+      } catch (err) {
+        console.error("Erreur OSRM:", err);
+        setRoutePath([origin, dest]);
+      }
+    };
+    fetchRoute();
+  }, [origin, dest, map]);
+
+  if (routePath.length === 0) return null;
+
+  return (
+    <Polyline positions={routePath} pathOptions={{ color: '#3b82f6', weight: 6, opacity: 0.8 }}>
+      {distanceKm && (
+        <Tooltip permanent direction="top" className="bg-white/90 text-blue-600 border border-blue-200 rounded-lg font-bold shadow-lg">
+          {distanceKm}
+        </Tooltip>
+      )}
+    </Polyline>
+  );
+};
+
 interface DeliveryMission {
   id: string;
   origin: string;
@@ -15,6 +74,10 @@ interface DeliveryMission {
   order_id: string;
   transporter_id: string | null;
   created_at: string;
+  product_name?: string;
+  quantity?: number;
+  unit?: string;
+  vehicle_type?: string;
 }
 
 interface FormattedTrajet {
@@ -24,6 +87,8 @@ interface FormattedTrajet {
   statut: string;
   progression: number;
   rawStatus: DeliveryMission['status'];
+  charge?: string;
+  vehicleType?: string;
 }
 
 const Trajets: React.FC = () => {
@@ -32,6 +97,7 @@ const Trajets: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [showMapId, setShowMapId] = useState<string | null>(null);
 
   const fetchTrajets = async () => {
     if (!user) return;
@@ -75,6 +141,8 @@ const Trajets: React.FC = () => {
           statut,
           progression,
           rawStatus: m.status,
+          charge: m.product_name ? `${m.quantity} ${m.unit} de ${m.product_name}` : `Commande N°${m.order_id.slice(0, 6).toUpperCase()}`,
+          vehicleType: m.vehicle_type || 'Véhicule standard',
         };
       });
       // Trier : d'abord les missions non terminées, puis les terminées
@@ -162,7 +230,10 @@ const Trajets: React.FC = () => {
                       <h3 className="font-bold text-white text-lg">
                         {trajet.origine} → {trajet.destination}
                       </h3>
-                      <p className="text-white/40 text-sm mt-1">
+                      <p className="text-white/70 text-sm mt-1">
+                        📦 {trajet.charge} • {trajet.vehicleType}
+                      </p>
+                      <p className="text-white/40 text-xs mt-1">
                         Trajet #{trajet.id.slice(0, 6).toUpperCase()}
                       </p>
                     </div>
@@ -212,6 +283,60 @@ const Trajets: React.FC = () => {
                     />
                   </div>
                 </div>
+
+                {/* Bouton Carte */}
+                <div className="mt-4 pt-4 border-t border-white/5 flex justify-end">
+                  <button
+                    onClick={() => setShowMapId(showMapId === trajet.id ? null : trajet.id)}
+                    className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition"
+                  >
+                    {showMapId === trajet.id ? <X size={16} /> : <MapIcon size={16} />}
+                    {showMapId === trajet.id ? 'Masquer la carte' : 'Voir sur la carte'}
+                  </button>
+                </div>
+
+                {/* Conteneur de la Carte Leaflet */}
+                {showMapId === trajet.id && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: '300px' }}
+                    className="mt-4 rounded-xl overflow-hidden border border-white/10"
+                  >
+                    {(() => {
+                      // Coordonnées déterministes basées sur l'ID pour la démo
+                      const hash = trajet.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+                      const baseLat = -18.8792; // Antananarivo
+                      const baseLng = 47.5079;
+                      
+                      const originLat = baseLat + ((hash % 100) / 1500);
+                      const originLng = baseLng - (((hash * 2) % 100) / 1500);
+                      const destLat = baseLat - (((hash * 3) % 100) / 1500);
+                      const destLng = baseLng + (((hash * 4) % 100) / 1500);
+                      
+                      const origin: [number, number] = [originLat, originLng];
+                      const dest: [number, number] = [destLat, destLng];
+                      const center: [number, number] = [(originLat + destLat) / 2, (originLng + destLng) / 2];
+
+                      return (
+                        <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%', background: '#e5e5e5' }}>
+                          <TileLayer
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                          />
+                          <Marker position={origin}>
+                            <Popup>Origine : {trajet.origine}</Popup>
+                          </Marker>
+                          <Marker position={dest}>
+                            <Popup>Destination : {trajet.destination}</Popup>
+                          </Marker>
+                          
+                          {/* Tracé de l'itinéraire réel sur route */}
+                          <RealRoute origin={origin} dest={dest} />
+                        </MapContainer>
+                      );
+                    })()}
+                  </motion.div>
+                )}
               </div>
             ))
           )}

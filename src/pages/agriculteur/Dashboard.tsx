@@ -187,8 +187,8 @@ const WeatherWidget: React.FC = () => {
   if (weather?.weatherCode === 0) { WeatherIcon = Sun; condition = "Ensoleillé"; }
   else if (weather?.weatherCode === 1 || weather?.weatherCode === 2) { WeatherIcon = Sun; condition = "Peu nuageux"; }
   else if (weather?.weatherCode === 3) { WeatherIcon = CloudRain; condition = "Nuageux"; }
-  else if (weather?.weatherCode >= 51 && weather?.weatherCode <= 67) { WeatherIcon = CloudRain; condition = "Pluie fine"; }
-  else if (weather?.weatherCode >= 80) { WeatherIcon = CloudRain; condition = "Averses"; }
+  else if (weather?.weatherCode !== undefined && weather?.weatherCode >= 51 && weather?.weatherCode <= 67) { WeatherIcon = CloudRain; condition = "Pluie fine"; }
+  else if (weather?.weatherCode !== undefined && weather?.weatherCode >= 80) { WeatherIcon = CloudRain; condition = "Averses"; }
 
   return (
     <div className="p-6 flex flex-col gap-4" style={{ ...glass, background: 'linear-gradient(135deg,rgba(56,189,248,0.12),rgba(14,165,233,0.06))', border: '1px solid rgba(56,189,248,0.18)' }}>
@@ -361,7 +361,7 @@ const DashboardAgriculteur: React.FC = () => {
           <p className="text-white/35 text-xs font-medium mb-1 uppercase tracking-widest">
             {new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
-          <h2 className="text-white font-bold text-2xl leading-tight">Bonjour, {user?.name || 'Producteur'} 👋</h2>
+          <h2 className="text-white font-bold text-2xl leading-tight">Bonjour, {(user as any)?.name || 'Producteur'} 👋</h2>
           <p className="text-white/40 text-sm mt-1">Voici un aperçu de votre exploitation aujourd'hui.</p>
         </div>
       </div>

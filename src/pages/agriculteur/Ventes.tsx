@@ -28,7 +28,7 @@ const Ventes: React.FC = () => {
         }
 
         // Mapping des statuts (backend -> français)
-        const statusMap: Record<string, { label: string; icon: JSX.Element; color: string; bg: string }> = {
+        const statusMap: Record<string, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
           'PENDING':     { label: 'En attente', icon: <Clock size={16} />, color: '#fbbf24', bg: 'bg-yellow-400/10 border-yellow-400/20' },
           'PREPARING':   { label: 'Préparation', icon: <Clock size={16} />, color: '#fbbf24', bg: 'bg-yellow-400/10 border-yellow-400/20' },
           'IN_TRANSIT':  { label: 'En transit', icon: <Clock size={16} />, color: '#60a5fa', bg: 'bg-blue-400/10 border-blue-400/20' },
@@ -88,6 +88,10 @@ const Ventes: React.FC = () => {
             statusColor: statusInfo.color,
             statusBg: statusInfo.bg,
             rawStatus: order.status,
+            // Ajout des détails pour le modal
+            buyerPhone: order.buyer_phone || order.buyer?.phone || 'Non spécifié',
+            deliveryAddress: order.delivery_address || order.address || 'Non spécifiée',
+            items: itemsList
           };
         });
 
@@ -104,7 +108,10 @@ const Ventes: React.FC = () => {
     fetchOrders();
   }, [user]);
 
-  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
+  const [selectedVente, setSelectedVente] = useState<any | null>(null);
+
+  const handleUpdateStatus = async (e: React.MouseEvent, orderId: string, newStatus: string) => {
+    e.stopPropagation(); // Évite d'ouvrir le modal en cliquant sur les boutons d'action
     try {
       await api.patch(`/orders/${orderId}/status`, { status: newStatus });
       // Mettre à jour l'état localement
@@ -122,6 +129,10 @@ const Ventes: React.FC = () => {
         }
         return v;
       }));
+      // Mettre à jour le modal ouvert si c'est la même commande
+      if (selectedVente && selectedVente.id === orderId) {
+        setSelectedVente((prev: any) => ({ ...prev, rawStatus: newStatus }));
+      }
     } catch (err) {
       console.error('Erreur mise à jour statut:', err);
       alert('Impossible de mettre à jour le statut.');
@@ -153,15 +164,15 @@ const Ventes: React.FC = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="space-y-6"
+      className="space-y-6 relative"
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-serif text-white">Historique des Ventes</h2>
           <p className="text-white/60 mt-1">Suivez l'état de vos commandes et vos revenus</p>
         </div>
-        <div className="bg-green-400/10 border border-green-400/30 rounded-xl px-4 py-2 text-center">
-          <p className="text-white/60 text-xs">Revenu total</p>
+        <div className="bg-green-400/10 border border-green-400/30 rounded-xl px-4 py-2 text-center shadow-lg">
+          <p className="text-white/60 text-xs">Revenu total (Livrées)</p>
           <p className="text-green-400 font-bold text-xl">{totalRevenue.toLocaleString('fr-MG')} Ar</p>
         </div>
       </div>
@@ -175,7 +186,11 @@ const Ventes: React.FC = () => {
         ) : (
           <div className="space-y-4">
             {ventes.map((vente) => (
-              <div key={vente.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-black/20 rounded-xl border border-white/5 hover:border-white/20 transition gap-4">
+              <div 
+                key={vente.id} 
+                onClick={() => setSelectedVente(vente)}
+                className="cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-black/20 rounded-xl border border-white/5 hover:border-green-400/30 transition gap-4"
+              >
                 <div className="flex items-start gap-4">
                   <div className={`p-3 rounded-xl ${vente.statusBg}`} style={{ color: vente.statusColor }}>
                     {vente.statusIcon}
@@ -199,7 +214,7 @@ const Ventes: React.FC = () => {
                   <div className="flex gap-2 mt-2">
                     {vente.rawStatus === 'PENDING' && (
                       <button 
-                        onClick={() => handleUpdateStatus(vente.id, 'PREPARING')}
+                        onClick={(e) => handleUpdateStatus(e, vente.id, 'PREPARING')}
                         className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-xs font-bold hover:bg-green-500/30 transition"
                       >
                         Valider paiement
@@ -207,7 +222,7 @@ const Ventes: React.FC = () => {
                     )}
                     {vente.rawStatus === 'PREPARING' && (
                       <button 
-                        onClick={() => handleUpdateStatus(vente.id, 'IN_TRANSIT')}
+                        onClick={(e) => handleUpdateStatus(e, vente.id, 'IN_TRANSIT')}
                         className="px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg text-xs font-bold hover:bg-blue-500/30 transition"
                       >
                         Expédier
@@ -215,7 +230,7 @@ const Ventes: React.FC = () => {
                     )}
                     {vente.rawStatus === 'IN_TRANSIT' && (
                       <button 
-                        onClick={() => handleUpdateStatus(vente.id, 'DELIVERED')}
+                        onClick={(e) => handleUpdateStatus(e, vente.id, 'DELIVERED')}
                         className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-xs font-bold hover:bg-green-500/30 transition"
                       >
                         Marquer Livré
@@ -228,6 +243,56 @@ const Ventes: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Modal de détails */}
+      {selectedVente && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedVente(null)}>
+          <div 
+            className="bg-neutral-900 border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-white/10">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold text-white">Détails de la vente</h3>
+                <button onClick={() => setSelectedVente(null)} className="text-white/40 hover:text-white">✕</button>
+              </div>
+              <p className="text-white/50 text-sm mt-1">Commande {selectedVente.shortId}</p>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="flex justify-between border-b border-white/10 pb-3">
+                <span className="text-white/50">Date</span>
+                <span className="text-white">{selectedVente.date}</span>
+              </div>
+              <div className="flex justify-between border-b border-white/10 pb-3">
+                <span className="text-white/50">Statut</span>
+                <span className={`font-bold`} style={{ color: selectedVente.statusColor }}>{selectedVente.statusLabel}</span>
+              </div>
+              <div className="flex justify-between border-b border-white/10 pb-3">
+                <span className="text-white/50">Acheteur</span>
+                <span className="text-white font-medium">{selectedVente.buyerName}</span>
+              </div>
+              <div className="flex justify-between border-b border-white/10 pb-3">
+                <span className="text-white/50">Téléphone</span>
+                <span className="text-white">{selectedVente.buyerPhone}</span>
+              </div>
+              <div className="flex justify-between border-b border-white/10 pb-3">
+                <span className="text-white/50">Adresse livraison</span>
+                <span className="text-white text-right max-w-[200px]">{selectedVente.deliveryAddress}</span>
+              </div>
+              <div className="flex justify-between border-b border-white/10 pb-3">
+                <span className="text-white/50">Produit(s)</span>
+                <span className="text-white text-right max-w-[200px]">{selectedVente.productDisplay}</span>
+              </div>
+            </div>
+
+            <div className="p-6 bg-black/20 flex justify-between items-center">
+              <span className="text-white/60 font-bold">Total Payé</span>
+              <span className="text-2xl font-bold text-green-400">{selectedVente.total.toLocaleString('fr-MG')} Ar</span>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 };

@@ -82,11 +82,11 @@ const Dashboard: React.FC = () => {
         const missionsRes = await api.get<DeliveryMission[]>(`/delivery/missions?transporterId=${user.id}`);
         const allMissions = missionsRes.data;
 
-        const formatMission = (m: DeliveryMission) => ({
+        const formatMission = (m: any) => ({
           id: `#MSS-${m.id.slice(0, 6).toUpperCase()}`,
           route: `${m.origin} → ${m.destination}`,
-          cargo: `Commande N°${m.order_id.slice(0, 4)}`,
-          client: 'Livraison standard',
+          cargo: m.product_name ? `${m.quantity} ${m.unit} de ${m.product_name}` : `Commande N°${m.order_id.slice(0, 4)}`,
+          client: `Véhicule: ${m.vehicle_type || 'Non spécifié'}`,
           distance: `${m.distance || 0} km`,
           status: m.status === 'DELIVERED' ? 'Livré' : 
                   (m.status === 'IN_TRANSIT' || m.status === 'PREPARING') ? 'En route' : m.status,

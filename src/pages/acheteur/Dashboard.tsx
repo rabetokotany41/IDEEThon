@@ -95,7 +95,7 @@ const DashboardAcheteur: React.FC = () => {
         ]);
 
         // 3. Formatage des commandes
-        const statusConfig: Record<string, { label: string; icon: JSX.Element; color: string; bg: string }> = {
+        const statusConfig: Record<string, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
           'PENDING':    { label: 'En attente', icon: <Clock size={12} />, color: '#fbbf24', bg: 'rgba(251,191,36,0.15)' },
           'PREPARING':  { label: 'Préparation', icon: <Clock size={12} />, color: '#fbbf24', bg: 'rgba(251,191,36,0.15)' },
           'IN_TRANSIT': { label: 'En transit', icon: <Clock size={12} />, color: '#60a5fa', bg: 'rgba(96,165,250,0.15)' },
