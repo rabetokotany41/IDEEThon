@@ -35,7 +35,7 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3000/auth/send-otp', {
+      const response = await fetch('https://backendidethon.onrender.com/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, purpose: 'login' }),
@@ -75,7 +75,7 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3000/auth/verify-otp', {
+      const response = await fetch('https://backendidethon.onrender.com/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, otp }),
@@ -103,7 +103,7 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3000/auth/login', {
+      const response = await fetch('https://backendidethon.onrender.com/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, password }),

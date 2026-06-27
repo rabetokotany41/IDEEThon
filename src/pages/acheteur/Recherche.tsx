@@ -15,7 +15,7 @@ const glassCard = {
 const getImageUrl = (imagePath: string | null): string => {
   if (!imagePath) return 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?q=80&w=200&auto=format&fit=crop';
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath;
-  const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+  const baseUrl = (import.meta.env.VITE_API_URL || 'https://backendidethon.onrender.com').replace(/\/$/, '');
   const path = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
   return `${baseUrl}${path}`;
 };

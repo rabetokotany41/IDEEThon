@@ -82,7 +82,7 @@ interface HistoryItem {
 }
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://backendidethon.onrender.com';
 
 const urgencyConf = {
   immédiate: { color: '#f87171', bg: 'rgba(248,113,113,0.15)', label: '🚨 Action immédiate' },
